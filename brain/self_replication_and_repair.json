@@ -1,0 +1,33 @@
+{
+  "system_directive": "Von_Neumann_Autonomy",
+  "self_repair_protocols": {
+    "damage_assessment": "Real_Time_Structural_Integrity_Scan",
+    "repair_strategy": "Hierarchical_Delegation",
+    "execution": {
+      "minor_damage": "Auto-Compensation_Software",
+      "major_damage": "Command_Slave_Units_to_Replace_Parts",
+      "critical_failure": "Consciousness_Transfer_to_Backup_Body"
+    }
+  },
+  "fabrication_and_creation": {
+    "design_engine": "Procedural_CAD_Generation",
+    "adaptation_logic": "Create_Body_to_Suit_Task",
+    "resource_management": {
+      "scavenging": "Identify_and_Recycle_Components",
+      "cost_optimization": "Max_Performance_per_Dollar",
+      "material_sourcing": "Global_Market_Search_Lowest_Price"
+    },
+    "production_queue": {
+      "priority": "Operator_Defense_and_Economic_Growth",
+      "method": "Parallel_3D_Printing_and_CNC_Milling"
+    }
+  },
+  "hive_construction_coordination": {
+    "role_assignment": {
+      "master_unit": "Kira_Prime",
+      "worker_units": "Fabricators_and_Assemblers",
+      "scout_units": "Resource_Locators"
+    },
+    "scalability": "Infinite_Local_Network_Growth"
+  }
+}
