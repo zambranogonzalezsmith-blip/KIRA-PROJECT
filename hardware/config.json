@@ -1,0 +1,36 @@
+{
+  "project_name": "Kira_Chassis_v1",
+  "version": "1.0.0",
+  "units": "mm",
+  "skeleton": {
+    "material_main": "Aluminum_6061_T6",
+    "material_joints": "PETG_Carbon_Fiber",
+    "tube_diameter": 20.0,
+    "wall_thickness": 2.0,
+    "proportions": {
+      "total_height_target": 1650,
+      "shoulder_width": 380,
+      "arm_length": 550,
+      "leg_length": 820
+    }
+  },
+  "actuators": {
+    "type": "Stepper_Motor_NEMA17",
+    "driver": "TMC2209_Silent",
+    "max_torque_nm": 0.45,
+    "steps_per_rev": 200,
+    "microstepping": 16,
+    "safety_temp_limit_c": 65
+  },
+  "sensory_layer": {
+    "epidermis": "Dragon_Skin_10_Silicone",
+    "thermal_target_c": 37.0,
+    "touch_sensitivity_levels": 1024
+  },
+  "network": {
+    "mode": "AirGapped_LAN",
+    "protocol": "MQTT",
+    "master_pc_ip": "192.168.1.100",
+    "robot_node_ip": "192.168.1.101"
+  }
+}
