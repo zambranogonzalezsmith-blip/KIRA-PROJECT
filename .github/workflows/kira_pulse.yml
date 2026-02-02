@@ -19,9 +19,6 @@ jobs:
       - name: Ejecutar motor Kira
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
-        - name: Ejecutar motor Kira
-        env:
-          FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
           ls -R
           python data_bridge.py
