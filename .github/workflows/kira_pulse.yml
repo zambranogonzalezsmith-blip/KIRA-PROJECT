@@ -20,9 +20,20 @@ jobs:
       - name: Instalar librerias
         run: pip install yfinance firebase-admin
 
+      - name: Verificacion de archivos
+        run: |
+          echo "Buscando archivos en el servidor..."
+          ls -R
+
       - name: Ejecutar motor Kira
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
-          # Este comando busca el archivo y lo ejecuta, avisando si no existe
-          [ -f "data_bridge.py" ] && python data_bridge.py || (echo "❌ Error: data_bridge.py NO está en la raíz" && exit 1)
+          if [ -f "data_bridge.py" ]; then
+            python data_bridge.py
+          elif [ -f "scripts/data_bridge.py" ]; then
+            python scripts/data_bridge.py
+          else
+            echo "❌ ERROR CRITICO: data_bridge.py no aparece en ninguna parte."
+            exit 1
+          fi
