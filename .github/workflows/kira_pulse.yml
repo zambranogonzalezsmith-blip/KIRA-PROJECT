@@ -15,8 +15,9 @@ jobs:
         with:
           python-version: '3.9'
       - name: Instalar librerías
-        run: pip install yfinance firebase-admin
-      - name: Ejecutar motor Kira
+        - name: Ejecutar motor Kira
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
-        run: python data_bridge.py
+        run: |
+          ls -R
+          python data_bridge.py
