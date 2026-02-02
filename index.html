@@ -179,5 +179,19 @@
 
         iniciarEscucha();
     </script>
+    <div style="position: fixed; bottom: 0; right: 0; z-index: -1; opacity: 0.4; pointer-events: none;">
+    <img src="https://r.bing.com/rp/placeholder_kira.png" id="kira-avatar" style="height: 90vh; filter: drop-shadow(0 0 15px #3b82f6);">
+</div>
+
+<script>
+    // Esto asegura que si Kira detecta una señal de COMPRA, brille en verde
+    // y si es VENTA, brille en rojo.
+    databaseRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        const avatar = document.getElementById('kira-avatar');
+        if(data.fvg.includes("COMPRA")) avatar.style.filter = "drop-shadow(0 0 20px #10b981)";
+        else if(data.fvg.includes("VENTA")) avatar.style.filter = "drop-shadow(0 0 20px #ef4444)";
+    });
+</script>
 </body>
 </html>
