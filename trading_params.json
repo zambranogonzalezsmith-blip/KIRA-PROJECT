@@ -1,0 +1,19 @@
+{
+  "monitoreo": {
+    "activos": ["EURUSD=X", "GC=F"],
+    "intervalo_analisis": "5m",
+    "actualizacion_segundos": 300
+  },
+  "gestion_riesgo": {
+    "lotes_estandar": 0.01,
+    "apalancamiento_max": 100,
+    "stop_loss_pips": 15,
+    "take_profit_pips": 45,
+    "max_operaciones_abiertas": 2
+  },
+  "umbrales_smc": {
+    "min_fvg_size": 0.0005,
+    "confirmacion_volumen": true,
+    "sensibilidad_reaccion": "alta"
+  }
+}
