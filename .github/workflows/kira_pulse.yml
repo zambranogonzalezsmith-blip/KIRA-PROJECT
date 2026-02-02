@@ -1,28 +1,52 @@
-name: Kira Pulse (Cloud Server)
-on:
-  schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+import yfinance as yf
+import firebase_admin
+from firebase_admin import credentials, db
+import os
+import json
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout codigo
-        uses: actions/checkout@v3
-      - name: Instalar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Instalar librerias
-        run: pip install yfinance firebase-admin
-      - name: Diagnostico de Archivos
-        run: |
-          echo "Lista de archivos en el repositorio:"
-          ls -R
-      - name: Ejecutar motor Kira
-        env:
-          FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
-        run: |
-          # Intentamos ejecutarlo donde sea que este
-          python scripts/data_bridge.py || python data_bridge.py || echo "❌ El archivo no se encuentra en ninguna de las rutas previstas"
+# 1. Configuración de Seguridad
+firebase_config_raw = os.getenv('FIREBASE_CONFIG')
+if not firebase_config_raw:
+    raise ValueError("❌ Error: La variable FIREBASE_CONFIG no está configurada en los Secrets.")
+
+cred_dict = json.loads(firebase_config_raw)
+if not firebase_admin._apps:
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://kira-projet-default-rtdb.firebaseio.com'
+    })
+
+def analizar_mercado():
+    print("📡 Kira iniciando análisis de EUR/USD...")
+    
+    # 2. Obtener datos de Yahoo Finance
+    ticker = yf.Ticker("EURUSD=X")
+    data = ticker.history(period="1d", interval="15m")
+    
+    if data.empty:
+        print("❌ No se pudieron obtener datos del mercado.")
+        return
+
+    precio_actual = data['Close'].iloc[-1]
+    
+    # Lógica simple de FVG / Tendencia (SMC)
+    # Aquí puedes expandir tu lógica según el archivo.json
+    tendencia = "BULLISH" if precio_actual > data['Open'].iloc[-1] else "BEARISH"
+    fvg_status = "Oportunidad de COMPRA" if tendencia == "BULLISH" else "Oportunidad de VENTA"
+
+    # 3. CONEXIÓN EXACTA CON TU HTML
+    # Tu HTML busca en 'trading/EURUSD', así que aquí usamos la misma ruta
+    ref = db.reference('trading/EURUSD')
+    
+    payload = {
+        'precio': round(precio_actual, 5),
+        'fvg': fvg_status,
+        'tendencia': tendencia,
+        'last_update': str(data.index[-1])
+    }
+
+    ref.set(payload)
+    print(f"✅ Kira envió con éxito: {payload['precio']} ({tendencia})")
+
+if __name__ == "__main__":
+    analizar_mercado()
