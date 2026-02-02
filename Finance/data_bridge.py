@@ -2,24 +2,33 @@ import yfinance as yf
 import pandas as pd
 import time
 import json
+import firebase_admin
+from firebase_admin import credentials, db
 
-# Configuración de Activos
-ACTIVOS = ["EURUSD=X", "GC=F"] # Forex y Oro
+# --- CONFIGURACIÓN DE SEGURIDAD ---
+# 1. Coloca aquí el nombre del archivo JSON que descargaste de Firebase
+# 2. Asegúrate de que ese archivo esté en la misma carpeta /finance
+try:
+    cred = credentials.Certificate("tu-archivo-firebase.json")
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://tu-proyecto-kira.firebaseio.com/' # Reemplaza con tu URL de Firebase
+    })
+    print("✅ Conexión con la Nube de Kira establecida.")
+except Exception as e:
+    print(f"❌ Error al conectar con Firebase: {e}")
+
+# Activos a monitorear
+ACTIVOS = ["EURUSD=X", "GC=F"] # EUR/USD y ORO
 
 def analizar_smc(df):
-    """
-    Kira detecta zonas de alta probabilidad (SMC)
-    """
+    """Lógica de Kira para detectar zonas de Smart Money"""
     last_close = df['Close'].iloc[-1]
-    last_low = df['Low'].iloc[-1]
-    last_high = df['High'].iloc[-1]
-    
-    # Lógica de detección de FVG simple para el puente
-    fvg = "No detectado"
+    # Detección simple de FVG (Fair Value Gap)
+    fvg = "NEUTRAL"
     if df['Low'].iloc[-3] > df['High'].iloc[-1]:
-        fvg = "BAJISTA (Bearish)"
+        fvg = "BEARISH FVG (VENTA)"
     elif df['High'].iloc[-3] < df['Low'].iloc[-1]:
-        fvg = "ALCISTA (Bullish)"
+        fvg = "BULLISH FVG (COMPRA)"
     
     return {
         "precio": round(last_close, 5),
@@ -27,25 +36,38 @@ def analizar_smc(df):
         "tendencia": "ALCISTA" if last_close > df['Close'].iloc[-20] else "BAJISTA"
     }
 
+def enviar_a_nube(simbolo, analisis):
+    """Envía los datos al index.html a través de Firebase"""
+    try:
+        # Limpiamos el nombre del símbolo para Firebase
+        id_limpio = simbolo.replace("=X", "").replace("=F", "")
+        ref = db.reference(f'trading/{id_limpio}')
+        ref.set({
+            'precio': analisis['precio'],
+            'fvg': analisis['fvg'],
+            'tendencia': analisis['tendencia'],
+            'timestamp': time.strftime("%H:%M:%S")
+        })
+        print(f"📡 [Kira] Datos de {id_limpio} actualizados en la plataforma online.")
+    except Exception as e:
+        print(f"❌ Error al enviar datos: {e}")
+
 def ejecutar_puente():
-    print("=== KIRA DATA BRIDGE: ACTIVADO ===")
+    print("=== KIRA DATA BRIDGE: OPERATIVO ===")
     while True:
         try:
             for activo in ACTIVOS:
-                # Descargamos datos recientes
+                # Descarga de datos reales de Forex/Oro
                 data = yf.download(activo, period="1d", interval="15m", progress=False)
                 if not data.empty:
                     analisis = analizar_smc(data)
-                    print(f"[{activo}] Precio: {analisis['precio']} | FVG: {analisis['fvg']}")
-                    
-                    # Aquí Kira prepara los datos para el index.html
-                    # En una fase avanzada, esto se sube vía API o WebSocket
+                    enviar_a_nube(activo, analisis)
             
-            # Pausa de 1 minuto para no saturar el sistema
+            # Esperar 60 segundos para la siguiente actualización
             time.sleep(60)
             
         except Exception as e:
-            print(f"Error en el puente de Kira: {e}")
+            print(f"⚠️ Error en el ciclo de Kira: {e}")
             time.sleep(10)
 
 if __name__ == "__main__":
