@@ -1,4 +1,5 @@
 name: Kira Pulse (Cloud Server)
+
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -21,11 +22,18 @@ jobs:
 
       - name: Diagnostico de Archivos
         run: |
-          echo "Lista de archivos en el repositorio:"
+          echo "Explorando el repositorio..."
           ls -R
 
       - name: Ejecutar motor Kira
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
-          python scripts/data_bridge.py || python data_bridge.py || echo "❌ El archivo no se encuentra"
+          if [ -f "scripts/data_bridge.py" ]; then
+            python scripts/data_bridge.py
+          elif [ -f "data_bridge.py" ]; then
+            python data_bridge.py
+          else
+            echo "❌ Error: No se encontro data_bridge.py en ninguna carpeta."
+            exit 1
+          fi
