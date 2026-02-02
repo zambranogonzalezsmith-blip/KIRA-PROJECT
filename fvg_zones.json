@@ -1,0 +1,14 @@
+{
+  "last_update": "2026-02-02",
+  "active_zones": [
+    {
+      "asset": "EURUSD",
+      "type": "BULLISH_FVG",
+      "top": 1.08950,
+      "bottom": 1.08820,
+      "status": "unmitigated",
+      "timestamp": "2026-02-02T12:00:00Z"
+    }
+  ],
+  "history": []
+}
