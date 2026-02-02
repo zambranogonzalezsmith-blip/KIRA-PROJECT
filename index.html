@@ -12,17 +12,32 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        body { background-color: #050505; color: #e2e2e2; font-family: 'Inter', sans-serif; }
+        body { background-color: #050505; color: #e2e2e2; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .neon-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.7); }
         .kira-border { border: 1px solid #1f2937; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
         .tf-btn { transition: all 0.3s; border: 1px solid #374151; color: #9ca3af; cursor: pointer; }
         .tf-btn:hover { background: #1f2937; color: white; }
         .tf-btn.active { background: #2563eb; color: white; border-color: #3b82f6; box-shadow: 0 0 10px rgba(37, 99, 235, 0.5); }
+        
+        /* Estilo del Avatar de Kira */
+        #kira-avatar {
+            position: fixed;
+            bottom: 0;
+            right: -5%;
+            z-index: 0;
+            height: 95vh;
+            opacity: 0.6;
+            pointer-events: none;
+            transition: filter 0.5s ease, opacity 0.5s ease;
+            filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
+        }
     </style>
 </head>
-<body class="p-4 min-h-screen flex flex-col">
+<body class="p-4 min-h-screen flex flex-col relative">
 
-    <header class="flex flex-col md:flex-row justify-between items-center mb-6 p-4 kira-border rounded-lg bg-black/80 backdrop-blur-sm gap-4">
+    <img src="kira-avatar.png" id="kira-avatar" alt="Kira Agent">
+
+    <header class="relative z-10 flex flex-col md:flex-row justify-between items-center mb-6 p-4 kira-border rounded-lg bg-black/80 backdrop-blur-sm gap-4">
         <div>
             <h1 class="text-2xl font-bold neon-text uppercase tracking-tighter">Kira Oracle <span class="text-blue-500 text-sm align-top">V2.0</span></h1>
             <p class="text-xs text-gray-500">Soberanía Económica | EURUSD - XAUUSD</p>
@@ -41,9 +56,9 @@
         </div>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow">
+    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow">
         <div class="lg:col-span-1 space-y-4">
-            <div class="p-4 kira-border rounded-lg bg-gray-900/40">
+            <div class="p-4 kira-border rounded-lg bg-gray-900/60 backdrop-blur-md">
                 <h2 class="text-xs font-bold mb-3 text-blue-400 tracking-widest uppercase">Análisis SMC</h2>
                 <div id="signals-container" class="space-y-3">
                     <div class="p-3 text-xs bg-gray-800/50 text-center text-gray-500 italic">
@@ -52,7 +67,7 @@
                 </div>
             </div>
 
-            <div class="p-4 kira-border rounded-lg bg-gray-900/40">
+            <div class="p-4 kira-border rounded-lg bg-gray-900/60 backdrop-blur-md">
                 <h2 class="text-xs font-bold mb-2 text-gray-400 uppercase">Vela Actual</h2>
                 <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
                     <div class="text-gray-500">O: <span id="candle-open" class="text-white">0.00000</span></div>
@@ -63,9 +78,9 @@
             </div>
         </div>
 
-        <div class="lg:col-span-3 p-1 kira-border rounded-lg bg-black/90 relative h-[500px] lg:h-auto flex flex-col">
+        <div class="lg:col-span-3 p-1 kira-border rounded-lg bg-black/60 relative h-[500px] lg:h-auto flex flex-col backdrop-blur-sm">
             <div id="chart" class="w-full flex-grow rounded"></div>
-            <div class="absolute top-4 left-4 z-10 pointer-events-none bg-black/40 p-2 rounded backdrop-blur-sm">
+            <div class="absolute top-4 left-4 z-10 pointer-events-none bg-black/60 p-2 rounded backdrop-blur-sm border border-gray-800">
                 <span class="text-gray-400 text-[10px] block font-bold tracking-widest">EUR/USD <span id="tf-display" class="text-blue-500">15M</span></span>
                 <span id="price-display" class="text-3xl font-bold text-white tracking-tighter">0.00000</span>
             </div>
@@ -73,7 +88,7 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE (EDITADO) ---
+        // --- 1. CONFIGURACIÓN FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBu6ChPonWQSKoTnXDaxdgGr4UKzZUiTHg",
             authDomain: "kira-projet.firebaseapp.com",
@@ -85,20 +100,16 @@
             measurementId: "G-TEPVXE5NJN"
         };
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            document.getElementById('connection-status').classList.replace('bg-red-500', 'bg-green-500');
-            console.log("Kira Web: Conexión Exitosa.");
-        } catch (e) { console.error("Error Firebase:", e); }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
         // --- 2. CONFIGURACIÓN GRÁFICO ---
         const chartContainer = document.getElementById('chart');
         const chart = LightweightCharts.createChart(chartContainer, {
-            layout: { background: { type: 'solid', color: '#000000' }, textColor: '#9ca3af' },
+            layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#9ca3af' },
             grid: { vertLines: { color: '#111827' }, horzLines: { color: '#111827' } },
             rightPriceScale: { borderColor: '#374151' },
             timeScale: { borderColor: '#374151', timeVisible: true },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
         });
 
         const candleSeries = chart.addCandlestickSeries({
@@ -107,15 +118,8 @@
             wickUpColor: '#10B981', wickDownColor: '#EF4444',
         });
 
-        new ResizeObserver(entries => {
-            if (entries.length === 0) return;
-            const newRect = entries[0].contentRect;
-            chart.applyOptions({ width: newRect.width, height: newRect.height });
-        }).observe(chartContainer);
-
-        // --- 3. LÓGICA DE DATOS ---
+        // --- 3. LÓGICA DE DATOS Y REACTIVIDAD DE KIRA ---
         let lastCandle = null;
-        let databaseRef = null;
 
         function generarHistoriaInicial(precioBase) {
             const data = [];
@@ -133,27 +137,39 @@
         }
 
         function iniciarEscucha() {
-            if (databaseRef) databaseRef.off();
-            databaseRef = firebase.database().ref('trading/EURUSD'); 
+            const databaseRef = db.ref('trading/EURUSD'); 
+            const statusDot = document.getElementById('connection-status');
+            const avatar = document.getElementById('kira-avatar');
 
             databaseRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
 
+                // Conexión exitosa
+                statusDot.classList.replace('bg-red-500', 'bg-green-500');
+
                 const precioActual = parseFloat(data.precio);
                 document.getElementById('price-display').innerText = precioActual.toFixed(5);
                 
-                // Actualizar UI
-                let colorClass = data.fvg.includes("COMPRA") ? "border-green-500 text-green-400" : 
-                                 data.fvg.includes("VENTA") ? "border-red-500 text-red-400" : "border-gray-500 text-gray-400";
+                // Actualizar UI y Color de Kira
+                let colorClass = "border-gray-500 text-gray-400";
+                if (data.fvg.includes("COMPRA")) {
+                    colorClass = "border-green-500 text-green-400";
+                    avatar.style.filter = "drop-shadow(0 0 30px rgba(16, 185, 129, 0.8))";
+                } else if (data.fvg.includes("VENTA")) {
+                    colorClass = "border-red-500 text-red-400";
+                    avatar.style.filter = "drop-shadow(0 0 30px rgba(239, 68, 68, 0.8))";
+                }
+
                 document.getElementById('signals-container').innerHTML = `
-                    <div class="p-3 border-l-4 ${colorClass} bg-gray-800/30">
+                    <div class="p-3 border-l-4 ${colorClass} bg-gray-800/40">
                         <div class="text-[10px] text-gray-500 uppercase">Estado</div>
                         <div class="font-bold text-sm">${data.fvg}</div>
                         <div class="text-[10px] mt-1 text-gray-400 font-mono">Tendencia: ${data.tendencia}</div>
                     </div>
                 `;
 
+                // Actualizar Gráfico
                 if (!lastCandle) {
                     generarHistoriaInicial(precioActual);
                 } else {
@@ -161,37 +177,19 @@
                     if (precioActual > lastCandle.high) lastCandle.high = precioActual;
                     if (precioActual < lastCandle.low) lastCandle.low = precioActual;
                     candleSeries.update(lastCandle);
-                    
-                    document.getElementById('candle-open').innerText = lastCandle.open.toFixed(5);
-                    document.getElementById('candle-high').innerText = lastCandle.high.toFixed(5);
-                    document.getElementById('candle-low').innerText = lastCandle.low.toFixed(5);
-                    document.getElementById('candle-close').innerText = lastCandle.close.toFixed(5);
                 }
+            }, (error) => {
+                statusDot.classList.replace('bg-green-500', 'bg-red-500');
+                console.error("Error Firebase:", error);
             });
         }
 
-        function cambiarTemporalidad(tf) {
-            document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('tf-display').innerText = tf.toUpperCase();
-            // Aquí se reiniciaría el gráfico con nuevos datos si fuera necesario
-        }
-
         iniciarEscucha();
-    </script>
-    <div style="position: fixed; bottom: 0; right: 0; z-index: -1; opacity: 0.4; pointer-events: none;">
-    <img src="https://r.bing.com/rp/placeholder_kira.png" id="kira-avatar" style="height: 90vh; filter: drop-shadow(0 0 15px #3b82f6);">
-</div>
 
-<script>
-    // Esto asegura que si Kira detecta una señal de COMPRA, brille en verde
-    // y si es VENTA, brille en rojo.
-    databaseRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        const avatar = document.getElementById('kira-avatar');
-        if(data.fvg.includes("COMPRA")) avatar.style.filter = "drop-shadow(0 0 20px #10b981)";
-        else if(data.fvg.includes("VENTA")) avatar.style.filter = "drop-shadow(0 0 20px #ef4444)";
-    });
-</script>
+        // Responsive chart
+        new ResizeObserver(entries => {
+            chart.applyOptions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+        }).observe(chartContainer);
+    </script>
 </body>
 </html>
