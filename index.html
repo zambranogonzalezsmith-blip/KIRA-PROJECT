@@ -15,9 +15,7 @@
         body { background-color: #050505; color: #e2e2e2; font-family: 'Inter', sans-serif; }
         .neon-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.7); }
         .kira-border { border: 1px solid #1f2937; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-        
-        /* Botones de Temporalidad */
-        .tf-btn { transition: all 0.3s; border: 1px solid #374151; color: #9ca3af; }
+        .tf-btn { transition: all 0.3s; border: 1px solid #374151; color: #9ca3af; cursor: pointer; }
         .tf-btn:hover { background: #1f2937; color: white; }
         .tf-btn.active { background: #2563eb; color: white; border-color: #3b82f6; box-shadow: 0 0 10px rgba(37, 99, 235, 0.5); }
     </style>
@@ -39,67 +37,67 @@
 
         <div class="text-right flex items-center gap-3">
             <div id="connection-status" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-            <span class="text-xs text-gray-400 font-mono">LIVE FEED</span>
+            <span class="text-xs text-gray-400 font-mono uppercase">Live Link</span>
         </div>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow">
-        
         <div class="lg:col-span-1 space-y-4">
             <div class="p-4 kira-border rounded-lg bg-gray-900/40">
-                <h2 class="text-xs font-bold mb-3 text-blue-400 tracking-widest">ANÁLISIS SMC</h2>
+                <h2 class="text-xs font-bold mb-3 text-blue-400 tracking-widest uppercase">Análisis SMC</h2>
                 <div id="signals-container" class="space-y-3">
-                    <div class="p-3 text-xs bg-gray-800/50 text-center text-gray-500">
-                        Esperando señal del puente de datos...
+                    <div class="p-3 text-xs bg-gray-800/50 text-center text-gray-500 italic">
+                        Esperando señal de Kira...
                     </div>
                 </div>
             </div>
 
             <div class="p-4 kira-border rounded-lg bg-gray-900/40">
-                <h2 class="text-xs font-bold mb-2 text-gray-400">VELA ACTUAL</h2>
-                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div class="text-gray-500">OPEN: <span id="candle-open" class="text-white">---</span></div>
-                    <div class="text-gray-500">HIGH: <span id="candle-high" class="text-white">---</span></div>
-                    <div class="text-gray-500">LOW:  <span id="candle-low" class="text-white">---</span></div>
-                    <div class="text-gray-500">CLOSE:<span id="candle-close" class="text-white">---</span></div>
+                <h2 class="text-xs font-bold mb-2 text-gray-400 uppercase">Vela Actual</h2>
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div class="text-gray-500">O: <span id="candle-open" class="text-white">0.00000</span></div>
+                    <div class="text-gray-500">H: <span id="candle-high" class="text-white">0.00000</span></div>
+                    <div class="text-gray-500">L: <span id="candle-low" class="text-white">0.00000</span></div>
+                    <div class="text-gray-500">C: <span id="candle-close" class="text-white">0.00000</span></div>
                 </div>
             </div>
         </div>
 
         <div class="lg:col-span-3 p-1 kira-border rounded-lg bg-black/90 relative h-[500px] lg:h-auto flex flex-col">
             <div id="chart" class="w-full flex-grow rounded"></div>
-            <div class="absolute top-4 left-4 z-10 pointer-events-none">
-                <span class="text-gray-400 text-xs block font-bold">EUR/USD <span id="tf-display" class="text-blue-500">15m</span></span>
-                <span id="price-display" class="text-3xl font-bold text-white tracking-tighter">Loading...</span>
+            <div class="absolute top-4 left-4 z-10 pointer-events-none bg-black/40 p-2 rounded backdrop-blur-sm">
+                <span class="text-gray-400 text-[10px] block font-bold tracking-widest">EUR/USD <span id="tf-display" class="text-blue-500">15M</span></span>
+                <span id="price-display" class="text-3xl font-bold text-white tracking-tighter">0.00000</span>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE ---
+        // --- 1. CONFIGURACIÓN FIREBASE (EDITADO) ---
         const firebaseConfig = {
-            apiKey: "TU_API_KEY", // <--- PEGA AQUÍ TU API KEY
-            authDomain: "tu-proyecto.firebaseapp.com",
-            databaseURL: "https://tu-proyecto-kira.firebaseio.com", // <--- URL DE TU BASE DE DATOS
-            projectId: "tu-proyecto",
-            storageBucket: "tu-proyecto.appspot.com",
-            messagingSenderId: "tu-id",
-            appId: "tu-app-id"
+            apiKey: "AIzaSyBu6ChPonWQSKoTnXDaxdgGr4UKzZUiTHg",
+            authDomain: "kira-projet.firebaseapp.com",
+            databaseURL: "https://kira-projet-default-rtdb.firebaseio.com", 
+            projectId: "kira-projet",
+            storageBucket: "kira-projet.firebasestorage.app",
+            messagingSenderId: "666447987197",
+            appId: "1:666447987197:web:2f9de6a52c32766c495994",
+            measurementId: "G-TEPVXE5NJN"
         };
 
         try {
             firebase.initializeApp(firebaseConfig);
             document.getElementById('connection-status').classList.replace('bg-red-500', 'bg-green-500');
-            console.log("Kira Web: Conectada.");
+            console.log("Kira Web: Conexión Exitosa.");
         } catch (e) { console.error("Error Firebase:", e); }
 
-        // --- 2. CONFIGURACIÓN DEL GRÁFICO DE VELA ---
+        // --- 2. CONFIGURACIÓN GRÁFICO ---
         const chartContainer = document.getElementById('chart');
         const chart = LightweightCharts.createChart(chartContainer, {
             layout: { background: { type: 'solid', color: '#000000' }, textColor: '#9ca3af' },
             grid: { vertLines: { color: '#111827' }, horzLines: { color: '#111827' } },
             rightPriceScale: { borderColor: '#374151' },
-            timeScale: { borderColor: '#374151', timeVisible: true, secondsVisible: false },
+            timeScale: { borderColor: '#374151', timeVisible: true },
             crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
         });
 
@@ -109,54 +107,33 @@
             wickUpColor: '#10B981', wickDownColor: '#EF4444',
         });
 
-        // Responsive
         new ResizeObserver(entries => {
             if (entries.length === 0) return;
             const newRect = entries[0].contentRect;
             chart.applyOptions({ width: newRect.width, height: newRect.height });
         }).observe(chartContainer);
 
-        // --- 3. LÓGICA DE DATOS Y TEMPORALIDAD ---
-        let currentTf = '15m';
+        // --- 3. LÓGICA DE DATOS ---
         let lastCandle = null;
         let databaseRef = null;
 
-        // Función para generar velas históricas falsas (para que el gráfico no empiece vacío)
-        // En producción, esto se reemplazaría por una carga de datos históricos real
         function generarHistoriaInicial(precioBase) {
             const data = [];
-            let time = Math.floor(Date.now() / 1000) - (100 * 60 * 15); // 100 velas atrás
+            let time = Math.floor(Date.now() / 1000) - (100 * 900); 
             let currentPrice = precioBase;
-            
             for (let i = 0; i < 100; i++) {
                 let open = currentPrice;
-                let close = currentPrice + (Math.random() - 0.5) * 0.0050;
-                let high = Math.max(open, close) + Math.random() * 0.0020;
-                let low = Math.min(open, close) - Math.random() * 0.0020;
-                
-                data.push({ time: time, open, high, low, close });
+                let close = currentPrice + (Math.random() - 0.5) * 0.002;
+                data.push({ time: time, open, high: Math.max(open, close)+0.0005, low: Math.min(open, close)-0.0005, close });
                 currentPrice = close;
-                time += (currentTf === '1m' ? 60 : currentTf === '5m' ? 300 : currentTf === '15m' ? 900 : 3600);
+                time += 900;
             }
-            lastCandle = data[data.length - 1]; // Guardamos la última para actualizarla en vivo
+            lastCandle = data[data.length - 1];
             candleSeries.setData(data);
         }
 
-        function cambiarTemporalidad(tf) {
-            // Actualizar botones UI
-            document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('tf-display').innerText = tf;
-            currentTf = tf;
-
-            // Reiniciar listener de Firebase (Simulación de cambio de feed)
-            iniciarEscucha();
-        }
-
         function iniciarEscucha() {
-            if (databaseRef) databaseRef.off(); // Apagar escucha anterior
-            
-            // Escuchamos el nodo principal. En el futuro, tu Python puede escribir en 'trading/EURUSD/15m'
+            if (databaseRef) databaseRef.off();
             databaseRef = firebase.database().ref('trading/EURUSD'); 
 
             databaseRef.on('value', (snapshot) => {
@@ -165,24 +142,26 @@
 
                 const precioActual = parseFloat(data.precio);
                 document.getElementById('price-display').innerText = precioActual.toFixed(5);
-                actualizarPanelLateral(data);
+                
+                // Actualizar UI
+                let colorClass = data.fvg.includes("COMPRA") ? "border-green-500 text-green-400" : 
+                                 data.fvg.includes("VENTA") ? "border-red-500 text-red-400" : "border-gray-500 text-gray-400";
+                document.getElementById('signals-container').innerHTML = `
+                    <div class="p-3 border-l-4 ${colorClass} bg-gray-800/30">
+                        <div class="text-[10px] text-gray-500 uppercase">Estado</div>
+                        <div class="font-bold text-sm">${data.fvg}</div>
+                        <div class="text-[10px] mt-1 text-gray-400 font-mono">Tendencia: ${data.tendencia}</div>
+                    </div>
+                `;
 
-                // --- LÓGICA DE VELA VIVA ---
                 if (!lastCandle) {
-                    generarHistoriaInicial(precioActual); // Primera carga
+                    generarHistoriaInicial(precioActual);
                 } else {
-                    // Actualizamos la vela actual con el nuevo precio
-                    const now = Math.floor(Date.now() / 1000);
-                    
-                    // Si pasaron X minutos, crear nueva vela (simplificado)
-                    // Aquí solo actualizamos la vela actual para efecto visual "vivo"
                     lastCandle.close = precioActual;
                     if (precioActual > lastCandle.high) lastCandle.high = precioActual;
                     if (precioActual < lastCandle.low) lastCandle.low = precioActual;
-                    
                     candleSeries.update(lastCandle);
                     
-                    // Actualizar datos numéricos en pantalla
                     document.getElementById('candle-open').innerText = lastCandle.open.toFixed(5);
                     document.getElementById('candle-high').innerText = lastCandle.high.toFixed(5);
                     document.getElementById('candle-low').innerText = lastCandle.low.toFixed(5);
@@ -191,22 +170,14 @@
             });
         }
 
-        function actualizarPanelLateral(data) {
-            let colorClass = data.fvg.includes("COMPRA") ? "border-green-500 text-green-400" : 
-                             data.fvg.includes("VENTA") ? "border-red-500 text-red-400" : "border-gray-500 text-gray-400";
-            
-            document.getElementById('signals-container').innerHTML = `
-                <div class="p-3 border-l-4 ${colorClass} bg-gray-800/30">
-                    <div class="text-[10px] text-gray-500">SEÑAL DETECTADA</div>
-                    <div class="font-bold text-sm">${data.fvg}</div>
-                    <div class="text-[10px] mt-1 text-gray-400">Tendencia: ${data.tendencia}</div>
-                </div>
-            `;
+        function cambiarTemporalidad(tf) {
+            document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${tf}`).classList.add('active');
+            document.getElementById('tf-display').innerText = tf.toUpperCase();
+            // Aquí se reiniciaría el gráfico con nuevos datos si fuera necesario
         }
 
-        // Iniciar
         iniciarEscucha();
-
     </script>
 </body>
 </html>
