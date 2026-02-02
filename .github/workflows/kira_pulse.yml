@@ -1,20 +1,6 @@
-name: Kira Pulse (Cloud Server)
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Instalar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - run: pip install yfinance firebase-admin
-      - name: Ejecutar motor Kira
+￼Enter file contents here- name: Ejecutar motor Kira
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
-        run: python finance/data_bridge.py
+        run: |
+          ls -R
+          python data_bridge.py
