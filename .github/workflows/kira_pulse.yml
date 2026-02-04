@@ -1,14 +1,14 @@
 name: Kira Pulse
 
 on:
-  workflow_dispatch: # Esto permite el botón manual
+  workflow_dispatch:
   schedule:
     - cron: '*/5 * * * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # ¡ESTO EVITA EL COLOR NARANJA ETERNO!
+    timeout-minutes: 3 # Si en 3 minutos no termina, se apaga solo (evita el naranja)
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
@@ -16,6 +16,6 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install
-        run: pip install yfinance requests
+        run: pip install yfinance requests # SOLO estas dos librerías
       - name: Run
         run: python data_bridge.py
