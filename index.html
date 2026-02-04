@@ -19,9 +19,9 @@
         .kira-logo-active { animation: scan-glow 2s infinite ease-in-out; }
 
         /* Retícula de Ojo / Escáner */
-        .reticle-container { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; }
-        .reticle { position: absolute; inset: 0; border: 2px solid rgba(0, 242, 255, 0.2); border-radius: 50%; animation: rotate 4s linear infinite; }
-        .scan-line-eye { position: absolute; width: 100%; height: 2px; background: #00f2ff; box-shadow: 0 0 10px #00f2ff; top: 50%; opacity: 0; }
+        .reticle-container { position: relative; width: 120px; height: 120px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; }
+        .reticle { position: absolute; inset: 0; border: 2px dashed rgba(0, 242, 255, 0.4); border-radius: 50%; animation: rotate 10s linear infinite; }
+        .scan-line-eye { position: absolute; width: 100%; height: 2px; background: #00f2ff; box-shadow: 0 0 15px #00f2ff; top: 50%; opacity: 0; z-index: 20; }
         .scanning .scan-line-eye { animation: scan-eye 1.5s ease-in-out infinite; opacity: 1; }
         
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -29,13 +29,16 @@
 
         /* Pantalla de Bloqueo */
         #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #051015 0%, #000 100%); z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1); }
-        .login-card { background: rgba(0, 0, 0, 0.85); border: 1px solid #00f2ff33; padding: 2.5rem; border-radius: 1.5rem; width: 380px; text-align: center; backdrop-filter: blur(15px); }
+        .login-card { background: rgba(0, 0, 0, 0.85); border: 1px solid #00f2ff33; padding: 2.5rem; border-radius: 1.5rem; width: 380px; text-align: center; backdrop-filter: blur(15px); box-shadow: 0 0 40px rgba(0, 242, 255, 0.05); }
 
         /* Estilos de Navegación */
         .active-tab { border-bottom: 2px solid #00f2ff !important; background: rgba(0, 242, 255, 0.1); color: #fff !important; }
         iframe { width: 100%; height: calc(100vh - 50px); border: none; background: #000; transition: opacity 0.3s ease; }
         .nav-btn { transition: all 0.3s; color: #6b7280; text-transform: uppercase; font-size: 10px; font-weight: bold; border-bottom: 2px solid transparent; }
         .nav-btn:hover { color: #00f2ff; }
+
+        /* Avatar Styling */
+        .avatar-glow { border: 1px solid #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -43,16 +46,17 @@
     <div id="auth-overlay">
         <div class="login-card">
             <div class="reticle-container" id="scanner-group">
-                <div class="reticle"></div><div class="scan-line-eye"></div>
-                <img src="kira.png" alt="KIRA" class="w-16 h-16 object-contain z-10">
+                <div class="reticle"></div>
+                <div class="scan-line-eye"></div>
+                <img src="kira.png" alt="KIRA" class="w-20 h-20 object-contain z-10 drop-shadow-[0_0_10px_rgba(0,242,255,0.5)]">
             </div>
             <h2 class="orbitron text-[10px] font-bold mb-6 tracking-[0.4em] text-cyan-500 uppercase">Neural Biometric Access</h2>
             <div class="space-y-4">
-                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
-                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
+                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400 transition-all">
+                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400 transition-all">
                 <div class="flex gap-2">
                     <button onclick="checkPass()" class="flex-1 bg-cyan-900/20 border border-cyan-500 text-cyan-500 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron uppercase">Grant Access</button>
-                    <button onclick="startEyeScan()" class="w-14 bg-black border border-cyan-500/50 rounded flex items-center justify-center text-xl hover:bg-cyan-500/20 transition-all">👁️</button>
+                    <button onclick="startEyeScan()" class="w-14 bg-black border border-cyan-500/50 rounded flex items-center justify-center text-xl hover:bg-cyan-500/20 transition-all shadow-inner">👁️</button>
                 </div>
                 <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4 tracking-widest">Awaiting Biometric Data...</p>
             </div>
@@ -69,7 +73,12 @@
             <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">⚡ Radar Scalper</button>
             <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">💎 Quantum Vault</button>
         </div>
-        <div class="ml-auto">
+        
+        <div class="ml-auto flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] text-gray-500 mono font-bold hidden sm:block">ADMIN_PRO</span>
+                <img src="kira-avatar.png" alt="User Avatar" class="w-8 h-8 rounded-full avatar-glow object-cover">
+            </div>
             <button onclick="location.reload()" class="text-[9px] text-red-900 hover:text-red-500 font-bold uppercase transition-colors">Logout</button>
         </div>
     </nav>
@@ -79,7 +88,6 @@
     </main>
 
     <script>
-        // Lógica de Escaneo de Retina
         function startEyeScan() {
             const msg = document.getElementById('auth-msg');
             document.getElementById('scanner-group').classList.add('scanning');
@@ -93,7 +101,6 @@
             }, 2200);
         }
 
-        // Lógica de Password
         function checkPass() {
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
@@ -116,23 +123,13 @@
             }, 800);
         }
 
-        // CARGA INTELIGENTE DE MÓDULOS (Evita Error 404 y Caché)
         function loadModule(file, btn) {
             const frame = document.getElementById('main-frame');
             frame.style.opacity = "0.2";
-            
-            // Forzamos la ruta relativa para GitHub Pages
-            const targetPath = "./" + file;
-            frame.src = targetPath;
-            
-            frame.onload = () => {
-                frame.style.opacity = "1";
-            };
-
-            // Actualización de UI
+            frame.src = "./" + file;
+            frame.onload = () => { frame.style.opacity = "1"; };
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
             btn.classList.add('active-tab');
-            console.log("Sistema KIRA: Accediendo a " + file);
         }
     </script>
 </body>
