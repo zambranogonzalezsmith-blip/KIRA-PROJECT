@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# CONFIGURACIÓN DEL PUENTE (Usa tu URL de npoint)
 BIN_URL = "https://api.npoint.io/50a3a47c4e1b58827a76"
 
 def calculate_atr(df, period=14):
@@ -16,76 +15,73 @@ def calculate_atr(df, period=14):
     return true_range.rolling(period).mean()
 
 def run_neural_analysis():
-    print("🧠 KIRA NEURAL ENGINE: ANALYZING ALL TIMEFRAMES...")
+    print(f"🧠 KIRA GLOBAL ENGINE START [{datetime.now().strftime('%H:%M:%S')}]")
     try:
-        # 1. DATA COLLECTION (M1 para Scalping, M15/H1 para Institucional)
-        ticker = yf.Ticker("EURUSD=X")
-        df_m1 = ticker.history(period="1d", interval="1m")
-        df_m15 = ticker.history(period="5d", interval="15m")
+        # 1. DATA COLLECTION
+        eurusd = yf.Ticker("EURUSD=X").history(period="1d", interval="1m")
+        dxy = yf.Ticker("DX-Y.NYB").history(period="1d", interval="5m") # Índice Dólar
         
-        if df_m1.empty or df_m15.empty: 
-            print("❌ Error: Datos de mercado no disponibles.")
-            return
+        if eurusd.empty or dxy.empty: return
 
-        # --- LÓGICA INSTITUCIONAL (H1/M15) ---
-        df_m15['ATR'] = calculate_atr(df_m15)
-        current_atr = df_m15['ATR'].iloc[-1]
-        last_price = df_m1['Close'].iloc[-1]
-        
-        # Detección de Liquidez (Sweeps)
-        swing_high = df_m15['High'].iloc[-10:-1].max()
-        swing_low = df_m15['Low'].iloc[-10:-1].min()
-        
-        # --- LÓGICA SCALPING (M1) ---
-        delta = df_m1['Close'].diff()
+        # Cálculo EURUSD
+        last_p = eurusd['Close'].iloc[-1]
+        delta = eurusd['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi_val = 100 - (100 / (1 + rs)).iloc[-1]
+        rsi = 100 - (100 / (1 + (gain/loss))).iloc[-1]
 
-        # DETERMINACIÓN DE SEÑAL Y BIAS
-        bias = "NEUTRAL"
-        signal = "WAITING"
-        color = "gray"
+        # ANÁLISIS DXY (FILTRO DE SEGURIDAD)
+        dxy_p = dxy['Close'].iloc[-1]
+        dxy_prev = dxy['Close'].iloc[-2]
+        dxy_trend = "BULLISH" if dxy_p > dxy_prev else "BEARISH"
         
-        # Sniper Entry (Institutional Sweep + Scalp Confirmation)
-        if last_price < swing_low and rsi_val < 35:
-            bias = "ALCISTA (INSTITUCIONAL)"
-            signal = "SCALP BUY (OVERSOLD SWEEP)"
-            color = "green"
-        elif last_price > swing_high and rsi_val > 65:
-            bias = "BAJISTA (INSTITUCIONAL)"
-            signal = "SCALP SELL (OVERBOUGHT SWEEP)"
-            color = "red"
+        # 2. ESCANEO MULTI-ACTIVO
+        gold = yf.Ticker("GC=F").history(period="1d")['Close'].iloc[-1]
+        oil = yf.Ticker("CL=F").history(period="1d")['Close'].iloc[-1]
+        btc = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
 
-        # CÁLCULO DE NIVELES (Sniper Precision)
-        sl_dist = current_atr * 1.5
-        sl = last_price - sl_dist if "BUY" in signal or color == "green" else last_price + sl_dist
-        tp1 = last_price + (sl_dist * 2) if "BUY" in signal or color == "green" else last_price - (sl_dist * 2)
-        tp2 = last_price + (sl_dist * 4) if "BUY" in signal or color == "green" else last_price - (sl_dist * 4)
+        # DETERMINACIÓN DE SEÑAL CON FILTRO DXY
+        bias, signal, color = "NEUTRAL", "BUSCANDO", "gray"
+        
+        # Si el DXY está subiendo fuerte, no compramos EURUSD (evitamos trampas)
+        if last_p < eurusd['Low'].iloc[-15:-1].min() and rsi < 32:
+            if dxy_trend == "BEARISH": # Dólar débil = Compra segura
+                bias, signal, color = "ALCISTA (SMC)", "BUY CONFIRMED", "green"
+            else:
+                bias, signal, color = "PRECAUCIÓN", "DXY STRONG (WAIT)", "orange"
+        
+        elif last_p > eurusd['High'].iloc[-15:-1].max() and rsi > 68:
+            if dxy_trend == "BULLISH": # Dólar fuerte = Venta segura
+                bias, signal, color = "BAJISTA (SMC)", "SELL CONFIRMED", "red"
+            else:
+                bias, signal, color = "PRECAUCIÓN", "DXY WEAK (WAIT)", "orange"
 
-        # 2. PAQUETE DE DATOS UNIFICADO
+        # NIVELES
+        sl_d = calculate_atr(yf.Ticker("EURUSD=X").history(period="5d", interval="15m")).iloc[-1] * 1.8
+        sl = last_p - sl_d if color == "green" else last_p + sl_d
+        tp = last_p + (sl_d * 2.5) if color == "green" else last_p - (sl_d * 2.5)
+
         payload = {
-            "p": "{:.5f}".format(last_price),
+            "p": "{:.5f}".format(last_p),
             "bias": bias,
             "sig": signal,
-            "rsi": "{:.2f}".format(rsi_val),
-            "volatility": "{:.6f}".format(current_atr),
+            "rsi": "{:.2f}".format(rsi),
+            "volatility": "{:.6f}".format(sl_d/1.8),
             "sl": "{:.5f}".format(sl),
-            "tp1": "{:.5f}".format(tp1),
-            "tp2": "{:.5f}".format(tp2),
-            "tp": "{:.5f}".format(tp1), # Para compatibilidad con scalper.html
+            "tp1": "{:.5f}".format(tp),
             "col": color,
+            "gold": "{:.2f}".format(gold),
+            "oil": "{:.2f}".format(oil),
+            "btc": "{:.0f}".format(btc),
+            "dxy": "{:.2f}".format(dxy_p),
+            "dxy_t": dxy_trend,
             "time": datetime.now().strftime("%H:%M:%S")
         }
 
-        # ENVIAR AL PUENTE
-        response = requests.post(BIN_URL, json=payload, timeout=10)
-        if response.status_code == 200:
-            print(f"✅ SINCRONIZACIÓN EXITOSA | P: {payload['p']} | RSI: {payload['rsi']}")
+        requests.post(BIN_URL, json=payload, timeout=10)
+        print(f"✅ GLOBAL SYNC OK | DXY: {payload['dxy']} ({dxy_trend})")
 
-    except Exception as e:
-        print(f"❌ ERROR EN EL MOTOR: {e}")
+    except Exception as e: print(f"❌ ERROR: {e}")
 
 if __name__ == "__main__":
     run_neural_analysis()
