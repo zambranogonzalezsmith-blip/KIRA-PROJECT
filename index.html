@@ -3,278 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRA | GLOBAL INSTITUTIONAL TERMINAL</title>
+    <title>KIRA | NEURAL HUB v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #010101; color: #cfcfcf; font-family: 'JetBrains Mono', monospace; scroll-behavior: smooth; overflow: hidden; }
-        .kira-border { border: 1px solid #1f2937; }
-        .glow-gold { box-shadow: 0 0 15px rgba(234, 179, 8, 0.1); }
-        .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); animation: pulseGreen 2s infinite; }
-        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); animation: pulseRed 2s infinite; }
+        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
         
-        .data-cell { background: #0a0a0a; border: 1px solid #1f2937; padding: 4px; border-radius: 4px; }
-        .label { font-size: 8px; color: #6b7280; text-transform: uppercase; font-weight: bold; }
-        .value { font-size: 11px; font-weight: bold; color: #e5e7eb; }
-        
-        /* Animaciones de Alerta */
-        @keyframes blinker { 50% { opacity: 0.3; } }
-        @keyframes pulseGreen { 0% { border-color: #22c55e; } 50% { border-color: #86efac; } 100% { border-color: #22c55e; } }
-        @keyframes pulseRed { 0% { border-color: #ef4444; } 50% { border-color: #fca5a5; } 100% { border-color: #ef4444; } }
-        .blink { animation: blinker 1.5s linear infinite; }
-
-        /* Overlay de Inicio */
-        #init-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 9999;
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        /* Efecto Escáner Logo */
+        @keyframes scan-glow {
+            0% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 15px #00f2ff); transform: scale(1.1); }
+            100% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
         }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #010101; }
-        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
+        .kira-logo-active { animation: scan-glow 2s infinite ease-in-out; }
+
+        /* Retícula de Ojo / Escáner */
+        .reticle-container { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; }
+        .reticle { position: absolute; inset: 0; border: 2px solid rgba(0, 242, 255, 0.2); border-radius: 50%; animation: rotate 4s linear infinite; }
+        .scan-line-eye { position: absolute; width: 100%; height: 2px; background: #00f2ff; box-shadow: 0 0 10px #00f2ff; top: 50%; opacity: 0; }
+        .scanning .scan-line-eye { animation: scan-eye 1.5s ease-in-out infinite; opacity: 1; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes scan-eye { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
+
+        /* Pantalla de Bloqueo */
+        #auth-overlay {
+            position: fixed; inset: 0; background: radial-gradient(circle at center, #051015 0%, #000 100%);
+            z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        .login-card { background: rgba(0, 0, 0, 0.85); border: 1px solid #00f2ff33; padding: 2.5rem; border-radius: 1.5rem; width: 380px; text-align: center; backdrop-filter: blur(15px); }
+
+        /* Tabs */
+        .active-tab { border-bottom: 2px solid #00f2ff !important; background: rgba(0, 242, 255, 0.1); color: #fff !important; }
+        iframe { width: 100%; height: calc(100vh - 50px); border: none; background: #000; }
+        .nav-btn { transition: all 0.3s; color: #6b7280; text-transform: uppercase; font-size: 10px; font-weight: bold; border-bottom: 2px solid transparent; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col p-2 bg-black overflow-y-auto">
+<body class="h-screen flex flex-col">
 
-    <div id="init-overlay">
-        <h1 class="text-3xl text-blue-500 font-bold tracking-widest mb-4">KIRA QUANTUM v6.0</h1>
-        <button onclick="startSystem()" class="px-8 py-3 border border-blue-500 text-blue-400 font-bold hover:bg-blue-900/30 transition-all uppercase tracking-[0.2em]">
-            INITIALIZE SYSTEM
-        </button>
-        <p class="mt-4 text-[10px] text-gray-600">Audio Drivers & Neural Link Loading...</p>
-    </div>
-
-    <nav class="flex bg-[#050505] border-b border-blue-900/30 p-2 gap-4 items-center sticky top-0 z-50">
-        <div class="relative group">
-            <button class="bg-blue-600/20 text-blue-400 text-[10px] px-4 py-1 rounded border border-blue-500/50 font-bold hover:bg-blue-500/30 transition-all uppercase">
-                📂 Módulos Kira
-            </button>
-            <div class="absolute left-0 mt-1 w-48 bg-[#0a0a0a] border border-gray-800 rounded shadow-xl hidden group-hover:block">
-                <a href="#" class="block px-4 py-2 text-[10px] text-blue-400 hover:bg-blue-900/20 border-b border-gray-900 uppercase font-bold">🏛️ Terminal SMC</a>
+    <div id="auth-overlay">
+        <div class="login-card">
+            <div class="reticle-container" id="scanner-group">
+                <div class="reticle"></div>
+                <div class="scan-line-eye"></div>
+                <img src="kira.png" alt="KIRA" class="w-16 h-16 object-contain z-10">
+            </div>
+            <h2 class="orbitron text-[10px] font-bold mb-6 tracking-[0.4em] text-cyan-500 uppercase">Neural Biometric Access</h2>
+            <div class="space-y-4">
+                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
+                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
+                <div class="flex gap-2">
+                    <button onclick="checkPass()" class="flex-1 bg-cyan-900/20 border border-cyan-500 text-cyan-500 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron">GRANT ACCESS</button>
+                    <button onclick="startEyeScan()" class="w-14 bg-black border border-cyan-500/50 rounded flex items-center justify-center hover:bg-cyan-500/20 transition-all text-xl">👁️</button>
+                </div>
+                <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4 tracking-widest">Awaiting Biometric Data...</p>
             </div>
         </div>
-        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
-            Neural Link: <span id="link-status" class="text-gray-500">OFFLINE</span>
-            <span class="text-gray-700">|</span>
-            <span class="text-blue-500" id="clock">00:00:00</span>
-            <span class="text-gray-700">|</span>
-            <span id="audio-status" class="text-red-500">🔇 MUTE</span>
+    </div>
+
+    <nav class="flex bg-[#050505] border-b border-blue-900/30 h-[50px] items-center px-4">
+        <div class="flex items-center gap-3 pr-4 border-r border-gray-800">
+            <img id="main-logo" src="kira.png" alt="KIRA" class="w-8 h-8 object-contain">
+            <span class="text-[10px] font-bold tracking-widest orbitron">KIRA <span class="text-cyan-500">SYSTEMS</span></span>
+        </div>
+
+        <div class="flex h-full gap-1 ml-4">
+            <button onclick="loadModule('index.html', this)" class="nav-btn px-6 h-full active-tab">🏛️ SMC Terminal v6</button>
+            <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">⚡ Radar Scalper</button>
+            <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">💎 Quantum Vault</button>
+        </div>
+
+        <div class="ml-auto flex items-center gap-4">
+            <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
+            <span class="text-[9px] text-gray-500 mono uppercase hidden sm:block">Link: Stable</span>
+            <button onclick="location.reload()" class="text-[9px] text-red-900 hover:text-red-500 font-bold uppercase ml-2">Logout</button>
         </div>
     </nav>
 
-    <header class="flex justify-between items-center p-3 kira-border bg-[#050505] rounded-t-lg mt-2 mb-1">
-        <div>
-            <h1 class="text-yellow-500 font-black tracking-widest text-sm uppercase">Kira Quantum <span class="text-white">v6.0</span></h1>
-            <span class="text-[8px] text-gray-500">SMC ALGORITHMIC CONFIRMATION SYSTEM</span>
-        </div>
-        <div class="flex gap-6">
-            <div class="flex flex-col items-end">
-                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">EURUSD Feed</span>
-                <span id="market-price" class="text-white font-bold text-sm">Loading...</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="grid grid-cols-1 lg:grid-cols-6 gap-2 mb-4">
-        <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg flex flex-col gap-4 glow-gold h-fit">
-            <h2 class="text-yellow-500 text-[10px] font-bold border-b border-gray-800 pb-2 uppercase italic">SMC Tactical Setup</h2>
-            
-            <div id="signal-display" class="p-4 bg-gray-900 rounded text-center text-sm text-gray-500 uppercase font-black border border-gray-800 transition-all duration-500">
-                CALIBRATING ALGORITHM...
-            </div>
-
-            <div class="bg-black/40 p-2 rounded border border-gray-900">
-                <p class="text-[8px] text-gray-500 uppercase mb-1">Confluencia Institucional:</p>
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[9px] text-gray-400">1. DXY TREND</span>
-                    <span id="check-dxy" class="text-[9px] text-gray-600">WAITING</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] text-gray-400">2. BIAS FLOW</span>
-                    <span id="check-bias" class="text-[9px] text-gray-600">WAITING</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="data-cell border-l-2 border-red-500">
-                    <p class="label">Invalidation Point (SL)</p>
-                    <p id="sl-price" class="value text-red-400">---</p>
-                </div>
-                <div class="data-cell border-l-2 border-blue-500">
-                    <p class="label">SMC Entry (OB)</p>
-                    <p id="entry-price" class="value text-blue-400">---</p>
-                </div>
-            </div>
-
-            <div class="space-y-1">
-                <div class="flex justify-between p-2 data-cell bg-green-900/5">
-                    <span class="label text-green-600">Target (Liquidity)</span>
-                    <span id="tp1-val" class="value text-green-500">---</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-4 kira-border bg-black rounded-lg h-[450px] overflow-hidden relative">
-            <div id="tradingview_main" class="h-full w-full"></div>
-            <div id="visual-alert" class="absolute top-2 right-2 px-3 py-1 bg-red-600 text-white text-[10px] font-bold hidden uppercase">
-                INSTITUTIONAL VOLUME DETECTED
-            </div>
-        </div>
+    <main id="view-container" class="bg-black flex-grow">
+        <iframe src="index.html" id="main-frame" name="main-frame"></iframe>
     </main>
 
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-2 pb-10">
-        <div class="bg-[#050505] kira-border p-4 rounded-lg">
-            <h2 class="text-blue-400 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Macro Correlation</h2>
-            <div class="space-y-2">
-                <div class="flex justify-between text-[10px] border-b border-blue-900/30 pb-1 bg-blue-900/5 p-2 rounded items-center">
-                    <span class="text-blue-400 font-black">DXY INDEX</span>
-                    <span id="dxy-val" class="text-white font-bold">---</span>
-                </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
-                    <span class="text-yellow-500 font-bold">GOLD (XAU)</span>
-                    <span id="gold-price" class="text-white font-bold">---</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // --- 1. SISTEMA DE AUDIO (Quantum Sound Engine) ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let audioEnabled = false;
+        // ESCANEO DE RETINA
+        function startEyeScan() {
+            const group = document.getElementById('scanner-group');
+            const msg = document.getElementById('auth-msg');
+            group.classList.add('scanning');
+            msg.innerText = "ANALYZING RETINA PATTERN...";
+            msg.classList.add('text-cyan-500', 'animate-pulse');
 
-        function playTone(freq, type, duration) {
-            if (!audioEnabled) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type; // 'sine', 'square', 'sawtooth'
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            setTimeout(() => {
+                msg.innerText = "IDENTITY CONFIRMED. ACCESS GRANTED.";
+                setTimeout(unlockDashboard, 800);
+            }, 2200);
         }
 
-        function playAlertSound(isBullish) {
-            if (isBullish) {
-                // Sonido "High Tech" para Compra (Doble Beep Agudo)
-                playTone(800, 'sine', 0.1);
-                setTimeout(() => playTone(1200, 'sine', 0.3), 150);
-            } else {
-                // Sonido Grave para Venta
-                playTone(300, 'square', 0.1);
-                setTimeout(() => playTone(200, 'square', 0.4), 150);
-            }
+        function checkPass() {
+            if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "admin") unlockDashboard();
         }
 
-        function startSystem() {
-            document.getElementById('init-overlay').style.display = 'none';
-            audioCtx.resume();
-            audioEnabled = true;
-            document.getElementById('audio-status').innerText = "🔊 AUDIO ON";
-            document.getElementById('audio-status').className = "text-green-500 blink";
-            playTone(600, 'sine', 0.2); // Sonido de inicio
-            updateTerminal(); // Primera llamada inmediata
+        function unlockDashboard() {
+            const overlay = document.getElementById('auth-overlay');
+            overlay.style.transform = "translateY(-100%)";
+            overlay.style.opacity = "0";
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('main-logo').classList.add('kira-logo-active');
+            }, 800);
         }
 
-        // --- 2. RELOJ ---
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-
-        // --- 3. TRADINGVIEW WIDGET ---
-        new TradingView.widget({
-            "autosize": true, "symbol": "FX:EURUSD", "interval": "15", "timezone": "Etc/UTC",
-            "theme": "dark", "style": "1", "locale": "es", "toolbar_bg": "#000000",
-            "enable_publishing": false, "hide_side_toolbar": false, "container_id": "tradingview_main",
-            "studies": ["STD;Fair_Value_Gap", "STD;Average_True_Range"] // Indicadores permitidos
-        });
-
-        // --- 4. CEREBRO KIRA (Lógica + Fetch) ---
-        let lastSignalState = "WAIT"; // Memoria para no repetir sonido
-
-        async function updateTerminal() {
-            const linkStatus = document.getElementById('link-status');
+        // CARGA DE MÓDULOS (Vault, Scalper, etc)
+        function loadModule(file, btn) {
+            const frame = document.getElementById('main-frame');
+            frame.style.opacity = "0.2";
             
-            try {
-                // Simulamos conexión con API (Usando npoint como mock server)
-                const res = await fetch('https://api.npoint.io/50a3a47c4e1b58827a76?t=' + Date.now());
-                const data = await res.json();
+            // Forzamos la carga del archivo
+            frame.src = file;
+            
+            frame.onload = () => {
+                frame.style.opacity = "1";
+            };
 
-                linkStatus.innerText = "CONNECTED";
-                linkStatus.className = "text-green-500 font-bold";
-
-                // Actualizar Datos Básicos
-                document.getElementById('market-price').innerText = data.p;
-                document.getElementById('sl-price').innerText = data.sl;
-                document.getElementById('entry-price').innerText = data.p;
-                document.getElementById('tp1-val').innerText = data.tp1;
-                document.getElementById('dxy-val').innerText = data.dxy;
-                document.getElementById('gold-price').innerText = "$" + data.gold;
-
-                // --- ALGORITMO SMC (Check de Confluencia) ---
-                const signalBox = document.getElementById('signal-display');
-                const checkDxy = document.getElementById('check-dxy');
-                const checkBias = document.getElementById('check-bias');
-                const visualAlert = document.getElementById('visual-alert');
-
-                // 1. Mostrar estado de los filtros
-                checkDxy.innerText = data.dxy_t; 
-                checkDxy.className = data.dxy_t === "BULLISH" ? "text-[9px] text-green-500 font-bold" : "text-[9px] text-red-500 font-bold";
-                
-                checkBias.innerText = data.bias;
-                checkBias.className = data.bias === "ALCISTA" ? "text-[9px] text-green-500 font-bold" : "text-[9px] text-red-500 font-bold";
-
-                // 2. Lógica de Disparo (Trigger)
-                let currentSignal = "WAIT";
-                let boxClass = "p-4 bg-gray-900 border border-gray-700 text-gray-500";
-                
-                // CONDICIÓN DE COMPRA (SMC: DXY Bajista + Bias Alcista)
-                if (data.col === "green") {
-                    currentSignal = "BUY";
-                    signalBox.innerText = "🚀 LONG ENTRY CONFIRMED";
-                    boxClass = "p-4 bg-green-900/20 border-2 border-green-500 text-green-400 font-black glow-green";
-                    visualAlert.style.display = "block";
-                    visualAlert.className = "absolute top-2 right-2 px-3 py-1 bg-green-600 text-white text-[10px] font-bold uppercase blink";
-                    visualAlert.innerText = "INSTITUTIONAL BUY FLOW";
-                } 
-                // CONDICIÓN DE VENTA (SMC: DXY Alcista + Bias Bajista)
-                else if (data.col === "red") {
-                    currentSignal = "SELL";
-                    signalBox.innerText = "🔻 SHORT ENTRY CONFIRMED";
-                    boxClass = "p-4 bg-red-900/20 border-2 border-red-500 text-red-400 font-black glow-red";
-                    visualAlert.style.display = "block";
-                    visualAlert.className = "absolute top-2 right-2 px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase blink";
-                    visualAlert.innerText = "INSTITUTIONAL SELL FLOW";
-                } 
-                else {
-                    signalBox.innerText = "ANALYZING MARKET STRUCTURE...";
-                    visualAlert.style.display = "none";
-                }
-
-                signalBox.className = boxClass;
-
-                // 3. CONTROL DE SONIDO (Solo suena si la señal CAMBIA)
-                if (currentSignal !== "WAIT" && currentSignal !== lastSignalState) {
-                    playAlertSound(currentSignal === "BUY");
-                    console.log("KIRA ALERT: " + currentSignal);
-                }
-
-                lastSignalState = currentSignal; // Actualizar memoria
-
-            } catch (e) {
-                console.log("Reconnecting...", e);
-                linkStatus.innerText = "RECONNECTING...";
-                linkStatus.className = "text-yellow-500 animate-pulse";
-            }
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+            btn.classList.add('active-tab');
         }
-
-        // Ejecutar ciclo cada 3 segundos
-        setInterval(updateTerminal, 3000);
     </script>
 </body>
-        </html>
+</html>
