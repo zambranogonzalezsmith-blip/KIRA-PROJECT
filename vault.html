@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIRA | QUANTUM VAULT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #020204; color: #e5e7eb; font-family: 'Rajdhani', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: rgba(15, 15, 20, 0.8); border: 1px solid #1f2937; backdrop-filter: blur(10px); }
+        .neon-border { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); border: 1px solid #4338ca; }
+        .btn-action { transition: all 0.2s; }
+        .btn-action:active { transform: scale(0.95); }
+        
+        /* Animación de Carga */
+        .loader-bar { height: 2px; width: 100%; background: #111; overflow: hidden; position: relative; }
+        .loader-bar::after { content: ''; position: absolute; left: -50%; height: 100%; width: 50%; background: #4f46e5; animation: load 2s infinite ease-in-out; }
+        @keyframes load { 0% { left: -50%; } 100% { left: 150%; } }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #3730a3; border-radius: 5px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <nav class="flex justify-between items-center p-3 border-b border-indigo-900/30 bg-[#050508]">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_15px_#4f46e5]">K</div>
+            <div>
+                <h1 class="font-bold text-lg leading-none tracking-widest text-indigo-400">KIRA VAULT</h1>
+                <p class="text-[10px] text-gray-500 mono">AUTO-TRADING SYSTEM v1.0</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <div class="text-right px-3 py-1 bg-gray-900 rounded border border-gray-800">
+                <p class="text-[8px] text-gray-500 uppercase font-bold">Total Equity (USDT)</p>
+                <p id="total-balance" class="text-xl font-bold text-white mono">$0.00</p>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+        
+        <div class="lg:col-span-3 bg-[#050508] border-r border-indigo-900/20 p-4 flex flex-col gap-4 overflow-y-auto">
+            
+            <div class="glass p-4 rounded-lg neon-border">
+                <h2 class="text-indigo-400 font-bold text-sm mb-3 uppercase flex justify-between">
+                    <span>Gestión de Capital</span>
+                    <span class="text-[10px] bg-indigo-900/50 px-2 rounded text-white">BEP20 / TRC20</span>
+                </h2>
+                
+                <div class="flex flex-col gap-2 mb-4">
+                    <label class="text-[10px] text-gray-400 uppercase font-bold">Ingresar USDT</label>
+                    <div class="flex gap-2">
+                        <input id="deposit-amount" type="number" class="w-full bg-black border border-gray-700 rounded p-2 text-white mono text-sm focus:border-indigo-500 outline-none" placeholder="Min $10">
+                        <button onclick="deposit()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 rounded font-bold text-xs btn-action">DEPOSITAR</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-center">
+                    <div class="bg-gray-900 p-2 rounded border border-gray-800">
+                        <p class="text-[9px] text-gray-500 uppercase">Beneficio Hoy</p>
+                        <p id="daily-profit" class="text-green-400 font-bold mono text-sm">+$0.00</p>
+                    </div>
+                    <div class="bg-gray-900 p-2 rounded border border-gray-800">
+                        <p class="text-[9px] text-gray-500 uppercase">Target (3%)</p>
+                        <p id="target-profit" class="text-blue-400 font-bold mono text-sm">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-4 rounded-lg border border-gray-800">
+                <h2 class="text-gray-300 font-bold text-sm mb-3 uppercase">Configuración del Algoritmo</h2>
+                
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase mb-1">Activo Objetivo</p>
+                        <select id="asset-select" onchange="changeChart()" class="w-full bg-black border border-gray-700 rounded p-1 text-xs text-white mono">
+                            <option value="NASDAQ:AAPL">APPLE (AAPL)</option>
+                            <option value="NASDAQ:TSLA">TESLA (TSLA)</option>
+                            <option value="NASDAQ:NVDA">NVIDIA (NVDA)</option>
+                            <option value="BITSTAMP:BTCUSD">BITCOIN (BTC)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase mb-1">Nivel de Riesgo</p>
+                        <div class="flex gap-1">
+                            <button onclick="setRisk('LOW')" class="flex-1 bg-green-900/20 border border-green-900 text-green-500 text-[10px] py-1 rounded hover:bg-green-900/40">SAFE</button>
+                            <button onclick="setRisk('HIGH')" class="flex-1 bg-red-900/20 border border-red-900 text-red-500 text-[10px] py-1 rounded hover:bg-red-900/40">AGGRO (3%)</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-gray-800">
+                        <p class="text-[10px] text-gray-400 mb-2">Estado del Motor: <span id="bot-status" class="text-red-500 font-bold">DETENIDO</span></p>
+                        <button id="btn-toggle-bot" onclick="toggleBot()" class="w-full bg-gray-800 text-gray-400 py-2 rounded font-bold text-xs border border-gray-600 hover:text-white hover:border-white transition-all">
+                            ACTIVAR AUTO-TRADING
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow bg-black rounded border border-gray-800 p-2 overflow-hidden flex flex-col">
+                <p class="text-[9px] text-gray-500 uppercase mb-2 border-b border-gray-900 pb-1">Registro de Operaciones (Logs)</p>
+                <div id="trade-logs" class="overflow-y-auto text-[9px] mono space-y-1 h-full text-gray-400">
+                    <p class="italic text-gray-700">> Sistema iniciado...</p>
+                    <p class="italic text-gray-700">> Esperando capital...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-9 flex flex-col bg-[#08080a] relative">
+            <div class="absolute top-0 w-full z-10 loader-bar hidden" id="scan-line"></div>
+            
+            <div id="tradingview_vault" class="h-2/3 w-full"></div>
+            
+            <div class="h-1/3 border-t border-gray-800 p-4 bg-[#050508] grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <h3 class="text-[10px] text-gray-500 uppercase font-bold mb-2">Proyección de Crecimiento (Interés Compuesto)</h3>
+                    <canvas id="growthChart" height="80"></canvas>
+                </div>
+                <div class="flex flex-col justify-center gap-2">
+                    <div class="glass p-2 rounded border-l-2 border-indigo-500">
+                        <p class="text-[9px] text-gray-400 uppercase">Operaciones Totales</p>
+                        <p id="total-trades" class="text-lg font-bold">0</p>
+                    </div>
+                    <div class="glass p-2 rounded border-l-2 border-green-500">
+                        <p class="text-[9px] text-gray-400 uppercase">Win Rate (Estimado)</p>
+                        <p class="text-lg font-bold text-green-400">68.5%</p>
+                    </div>
+                    <div class="glass p-2 rounded border-l-2 border-yellow-500">
+                        <p class="text-[9px] text-gray-400 uppercase">Próximo Payout</p>
+                        <p class="text-lg font-bold text-yellow-400">00:15:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // --- 1. CONFIGURACIÓN INICIAL ---
+        let balance = parseFloat(localStorage.getItem('kira_balance')) || 0;
+        let isBotRunning = false;
+        let riskMode = 'SAFE';
+        let tradeCount = 0;
+        let dailyProfit = 0;
+        let widget;
+
+        // Actualizar UI al inicio
+        updateUI();
+
+        // Inicializar TradingView
+        createWidget("NASDAQ:AAPL");
+
+        function createWidget(symbol) {
+            document.getElementById('tradingview_vault').innerHTML = "";
+            widget = new TradingView.widget({
+                "autosize": true, "symbol": symbol, "interval": "15", "timezone": "Etc/UTC",
+                "theme": "dark", "style": "1", "locale": "es", "toolbar_bg": "#000000",
+                "enable_publishing": false, "hide_side_toolbar": false, "container_id": "tradingview_vault",
+                "studies": ["STD;MA%20Cross", "STD;RSI"] // Estrategia visible
+            });
+        }
+
+        function changeChart() {
+            const sym = document.getElementById('asset-select').value;
+            createWidget(sym);
+            log(`Activo cambiado a: ${sym}`);
+        }
+
+        // --- 2. LÓGICA DE BILLETERA ---
+        function deposit() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            if (isNaN(amount) || amount < 10) {
+                alert("El depósito mínimo para operar el algoritmo es $10 USDT.");
+                return;
+            }
+            balance += amount;
+            localStorage.setItem('kira_balance', balance);
+            updateUI();
+            log(`Depósito confirmado: +$${amount.toFixed(2)} USDT`);
+            document.getElementById('deposit-amount').value = "";
+            updateGrowthChart(); // Actualizar gráfica con nuevo capital
+        }
+
+        function updateUI() {
+            document.getElementById('total-balance').innerText = `$${balance.toFixed(2)}`;
+            document.getElementById('target-profit').innerText = `$${(balance * 0.03).toFixed(2)}`; // 3% Target
+            document.getElementById('daily-profit').innerText = `+$${dailyProfit.toFixed(2)}`;
+            document.getElementById('total-trades').innerText = tradeCount;
+        }
+
+        function log(msg) {
+            const logBox = document.getElementById('trade-logs');
+            const time = new Date().toLocaleTimeString();
+            const p = document.createElement('p');
+            p.innerHTML = `<span class="text-gray-600">[${time}]</span> <span class="text-white">${msg}</span>`;
+            logBox.prepend(p);
+        }
+
+        // --- 3. SIMULACIÓN DEL ALGORITMO (MOTOR DE TRADING) ---
+        function setRisk(mode) {
+            riskMode = mode;
+            log(`Nivel de Riesgo ajustado a: ${mode}`);
+        }
+
+        function toggleBot() {
+            if (balance < 10) {
+                alert("Saldo insuficiente. Ingrese capital para iniciar.");
+                return;
+            }
+            isBotRunning = !isBotRunning;
+            const btn = document.getElementById('btn-toggle-bot');
+            const status = document.getElementById('bot-status');
+            const scanner = document.getElementById('scan-line');
+
+            if (isBotRunning) {
+                btn.innerText = "DETENER SISTEMA";
+                btn.className = "w-full bg-red-900/30 text-red-400 py-2 rounded font-bold text-xs border border-red-500 animate-pulse";
+                status.innerText = "EJECUTANDO...";
+                status.className = "text-green-500 font-bold blink";
+                scanner.classList.remove('hidden');
+                log(">>> MOTOR CUÁNTICO INICIADO. Escaneando oportunidades...");
+                startTradingLoop();
+            } else {
+                btn.innerText = "ACTIVAR AUTO-TRADING";
+                btn.className = "w-full bg-gray-800 text-gray-400 py-2 rounded font-bold text-xs border border-gray-600 hover:text-white";
+                status.innerText = "DETENIDO";
+                status.className = "text-red-500 font-bold";
+                scanner.classList.add('hidden');
+                log(">>> Motor detenido por el usuario.");
+            }
+        }
+
+        // Simulación de Operaciones (Demo Logic)
+        function startTradingLoop() {
+            if (!isBotRunning) return;
+
+            // Intervalo aleatorio entre 5 y 15 segundos para simular análisis
+            const waitTime = Math.floor(Math.random() * 10000) + 5000;
+
+            setTimeout(() => {
+                if (!isBotRunning) return;
+                
+                // Lógica de Ganancia/Pérdida aleatoria controlada (Simulación)
+                // En modo HIGH (Aggro) hay más riesgo pero más ganancia potencial
+                const winChance = riskMode === 'HIGH' ? 0.6 : 0.8;
+                const isWin = Math.random() < winChance;
+                
+                let profitPercent = 0;
+                if (isWin) {
+                    profitPercent = (Math.random() * 0.5) + 0.1; // Gana entre 0.1% y 0.6% por operación
+                } else {
+                    profitPercent = -((Math.random() * 0.3) + 0.1); // Pierde poco (Stop Loss ajustado)
+                }
+
+                const profitAmount = balance * (profitPercent / 100);
+                balance += profitAmount;
+                dailyProfit += profitAmount;
+                tradeCount++;
+                
+                localStorage.setItem('kira_balance', balance);
+                updateUI();
+
+                const symbol = document.getElementById('asset-select').value.split(':')[1];
+                const action = isWin ? "TAKE PROFIT" : "STOP LOSS";
+                const color = isWin ? "text-green-400" : "text-red-400";
+                
+                log(`${action} en ${symbol} | <span class="${color}">${profitAmount > 0 ? '+' : ''}$${profitAmount.toFixed(4)}</span>`);
+                
+                startTradingLoop(); // Bucle infinito
+            }, waitTime);
+        }
+
+        // --- 4. GRÁFICA DE RENDIMIENTO (CHART.JS) ---
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        let growthChart;
+
+        function updateGrowthChart() {
+            if(growthChart) growthChart.destroy();
+
+            // Proyección a 30 días con 3% diario
+            const days = Array.from({length: 31}, (_, i) => `Día ${i}`);
+            const dataPoints = [balance];
+            
+            for(let i = 1; i <= 30; i++) {
+                // Formula interés compuesto: P * (1 + r)^t
+                const prev = dataPoints[i-1];
+                dataPoints.push(prev * 1.03); 
+            }
+
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Proyección 3% Diario',
+                        data: dataPoints,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            grid: { color: '#1f2937' },
+                            ticks: { color: '#6b7280', font: {family: 'JetBrains Mono'} } 
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Cargar gráfica inicial
+        updateGrowthChart();
+
+    </script>
+</body>
+  </html>
