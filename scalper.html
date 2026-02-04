@@ -14,11 +14,18 @@
             width: 100%; position: absolute; animation: scan 3s linear infinite; 
         }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        .signal-pulse { animation: pulse-red 1.5s infinite; }
+        .signal-pulse-red { animation: pulse-red 1.5s infinite; }
+        .signal-pulse-green { animation: pulse-green 1.5s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
 </head>
 <body class="h-screen flex flex-col p-2 overflow-hidden bg-[radial-gradient(circle_at_center,_#051505_0%,_#000_100%)]">
+
+    <nav class="flex bg-[#050505] border-b border-green-900/30 p-1 gap-2 mb-1">
+        <a href="index.html" class="bg-gray-900 text-gray-500 text-[9px] px-3 py-1 rounded border border-gray-800 hover:text-blue-500 transition-all uppercase font-bold">Cambiar a Terminal SMC 🏛️</a>
+        <button class="bg-green-600/20 text-green-400 text-[9px] px-3 py-1 rounded border border-green-500/50 font-bold uppercase">Radar Scalper M1 Active</button>
+    </nav>
 
     <header class="flex justify-between items-center p-3 glass-panel rounded-t-xl border-b border-green-900/30">
         <div class="flex items-center gap-4">
@@ -27,7 +34,7 @@
                 <span class="text-[8px] radar-font">KIRA</span>
             </div>
             <div>
-                <h1 class="text-green-500 font-bold text-xs radar-font tracking-widest">SCALPING MODULE <span class="text-white">v5.2</span></h1>
+                <h1 class="text-green-500 font-bold text-xs radar-font tracking-widest uppercase">Scalping Module <span class="text-white">v5.5</span></h1>
                 <p id="server-time" class="text-[9px] text-green-900 font-bold italic uppercase">Syncing Neural Link...</p>
             </div>
         </div>
@@ -45,31 +52,31 @@
                 
                 <div id="signal-container" class="flex-grow flex flex-col justify-center items-center">
                     <div id="signal-badge" class="w-full py-4 text-center border border-green-900/30 text-gray-600 rounded-lg text-xs font-black uppercase">
-                        Buscando Entrada...
+                        Scanning M1...
                     </div>
                 </div>
 
                 <div class="mt-4 space-y-3">
                     <div class="flex justify-between items-center bg-black/50 p-2 rounded border border-gray-900">
-                        <span class="text-[9px] text-gray-500 uppercase">Take Profit</span>
+                        <span class="text-[9px] text-gray-500 uppercase font-bold">Scalp TP</span>
                         <span id="target-tp" class="text-xs font-bold text-green-500">---</span>
                     </div>
                     <div class="flex justify-between items-center bg-black/50 p-2 rounded border border-gray-900">
-                        <span class="text-[9px] text-gray-500 uppercase">Stop Loss</span>
+                        <span class="text-[9px] text-gray-500 uppercase font-bold">Scalp SL</span>
                         <span id="target-sl" class="text-xs font-bold text-red-500">---</span>
                     </div>
                 </div>
             </div>
 
             <div class="glass-panel p-3 rounded-lg h-32 flex flex-col justify-center">
-                <p class="text-[9px] text-center text-gray-600 mb-2 uppercase font-bold">RSI Neutro (14)</p>
+                <p id="rsi-label" class="text-[9px] text-center text-gray-600 mb-2 uppercase font-bold">RSI (14)</p>
                 <div class="w-full bg-gray-900 h-4 rounded-full overflow-hidden relative border border-green-900/20">
                     <div id="rsi-bar" class="h-full bg-green-500 transition-all duration-500" style="width: 50%"></div>
                 </div>
                 <div class="flex justify-between mt-1 text-[8px] text-gray-700 font-bold">
-                    <span>30</span>
+                    <span>30 (Oversold)</span>
                     <span id="rsi-val" class="text-white">50.00</span>
-                    <span>70</span>
+                    <span>70 (Overbought)</span>
                 </div>
             </div>
         </div>
@@ -80,17 +87,16 @@
     </div>
 
     <footer class="mt-1 p-2 glass-panel text-[8px] text-green-900 font-bold flex justify-between rounded-b-xl uppercase">
-        <div id="log-status font-mono">Status: Awaiting High Volatility</div>
-        <div class="radar-font">Kira Execution Engine - Low Latency Mode</div>
+        <div id="log-status">Status: Low Latency Mode Active</div>
+        <div class="radar-font font-bold">Kira Quant Engine v5.5</div>
     </footer>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // CONFIGURACIÓN DEL GRÁFICO PARA SCALPING (1 MINUTO)
         new TradingView.widget({
             "autosize": true, "symbol": "FX:EURUSD", "interval": "1", "timezone": "Etc/UTC",
             "theme": "dark", "style": "1", "locale": "es", "enable_publishing": false,
-            "container_id": "tradingview_scalp", "studies": ["STD;Relative_Strength_Index", "STD;Average_True_Range"]
+            "container_id": "tradingview_scalp", "studies": ["STD;Relative_Strength_Index"]
         });
 
         async function syncScalper() {
@@ -98,29 +104,36 @@
                 const res = await fetch('https://api.npoint.io/50a3a47c4e1b58827a76?t=' + Date.now());
                 const d = await res.json();
 
-                // Actualizar Precios y RSI
-                document.getElementById('live-price').innerText = d.p;
-                document.getElementById('rsi-val').innerText = d.rsi;
+                document.getElementById('live-price').innerText = d.p || "0.00000";
+                document.getElementById('rsi-val').innerText = d.rsi || "00.00";
                 document.getElementById('rsi-bar').style.width = d.rsi + '%';
-                document.getElementById('target-tp').innerText = d.tp;
-                document.getElementById('target-sl').innerText = d.sl;
+                document.getElementById('target-tp').innerText = d.tp || "---";
+                document.getElementById('target-sl').innerText = d.sl || "---";
                 document.getElementById('server-time').innerText = "Last Neural Update: " + d.time;
 
-                // Lógica Visual de Señal
                 const badge = document.getElementById('signal-badge');
                 badge.innerText = d.sig;
                 
+                // Reset de clases
+                badge.className = "w-full py-4 text-center border rounded-lg text-sm font-black uppercase transition-all duration-300 ";
+
                 if (d.col === "green") {
-                    badge.className = "w-full py-4 text-center border border-green-500 bg-green-900/20 text-green-400 rounded-lg text-sm font-black uppercase shadow-[0_0_15px_rgba(34,197,94,0.3)]";
+                    badge.classList.add("border-green-500", "bg-green-900/20", "text-green-400", "signal-pulse-green");
                 } else if (d.col === "red") {
-                    badge.className = "w-full py-4 text-center border border-red-500 bg-red-900/20 text-red-400 rounded-lg text-sm font-black uppercase signal-pulse";
+                    badge.classList.add("border-red-500", "bg-red-900/20", "text-red-400", "signal-pulse-red");
                 } else {
-                    badge.className = "w-full py-4 text-center border border-gray-800 text-gray-600 rounded-lg text-xs font-black uppercase";
+                    badge.classList.add("border-gray-800", "text-gray-600");
                 }
 
-            } catch (e) { console.log("Radar offline..."); }
+                // Color dinámico para el RSI
+                const rsiLabel = document.getElementById('rsi-label');
+                if (parseFloat(d.rsi) > 70) rsiLabel.className = "text-[9px] text-center text-red-500 mb-2 uppercase font-bold blink";
+                else if (parseFloat(d.rsi) < 30) rsiLabel.className = "text-[9px] text-center text-green-500 mb-2 uppercase font-bold blink";
+                else rsiLabel.className = "text-[9px] text-center text-gray-600 mb-2 uppercase font-bold";
+
+            } catch (e) { console.log("Re-sincronizando Radar..."); }
         }
-        setInterval(syncScalper, 3000); // Frecuencia de Scalping
+        setInterval(syncScalper, 3000);
     </script>
 </body>
 </html>
