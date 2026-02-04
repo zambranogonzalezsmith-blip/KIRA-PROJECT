@@ -12,33 +12,34 @@
         
         /* Efecto Escáner Logo */
         @keyframes scan-glow {
-            0% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
-            50% { filter: drop-shadow(0 0 15px #00f2ff); transform: scale(1.1); }
-            100% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
+            0%, 100% { filter: drop-shadow(0 0 5px #00f2ff); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 20px #00f2ff); opacity: 1; }
         }
         .kira-logo-active { animation: scan-glow 2s infinite ease-in-out; }
 
-        /* Retícula de Ojo / Escáner */
-        .reticle-container { position: relative; width: 120px; height: 120px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; }
-        .reticle { position: absolute; inset: 0; border: 2px dashed rgba(0, 242, 255, 0.4); border-radius: 50%; animation: rotate 10s linear infinite; }
-        .scan-line-eye { position: absolute; width: 100%; height: 2px; background: #00f2ff; box-shadow: 0 0 15px #00f2ff; top: 50%; opacity: 0; z-index: 20; }
-        .scanning .scan-line-eye { animation: scan-eye 1.5s ease-in-out infinite; opacity: 1; }
+        /* Retícula de Ojo Futurista */
+        .reticle-container { position: relative; width: 140px; height: 140px; margin: 0 auto 30px; display: flex; justify-content: center; align-items: center; }
+        .reticle-ring { position: absolute; inset: 0; border: 2px solid rgba(0, 242, 255, 0.1); border-radius: 50%; }
+        .reticle-scan { position: absolute; inset: -10px; border: 2px dashed #00f2ff; border-radius: 50%; opacity: 0.3; animation: rotate 15s linear infinite; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #00f2ff, transparent); box-shadow: 0 0 15px #00f2ff; top: 50%; opacity: 0; z-index: 20; }
+        
+        .scanning .scan-line { animation: scan-move 1.5s ease-in-out infinite; opacity: 1; }
         
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes scan-eye { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
+        @keyframes scan-move { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
 
         /* Pantalla de Bloqueo */
-        #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #051015 0%, #000 100%); z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1); }
-        .login-card { background: rgba(0, 0, 0, 0.85); border: 1px solid #00f2ff33; padding: 2.5rem; border-radius: 1.5rem; width: 380px; text-align: center; backdrop-filter: blur(15px); box-shadow: 0 0 40px rgba(0, 242, 255, 0.05); }
+        #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #0a1a20 0%, #000 100%); z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 1s cubic-bezier(0.8, 0, 0.2, 1); }
+        .login-card { background: rgba(0, 5, 10, 0.9); border: 1px solid #00f2ff33; padding: 3rem; border-radius: 20px; width: 400px; text-align: center; backdrop-filter: blur(20px); box-shadow: 0 0 50px rgba(0, 242, 255, 0.1); }
 
-        /* Estilos de Navegación */
-        .active-tab { border-bottom: 2px solid #00f2ff !important; background: rgba(0, 242, 255, 0.1); color: #fff !important; }
-        iframe { width: 100%; height: calc(100vh - 50px); border: none; background: #000; transition: opacity 0.3s ease; }
-        .nav-btn { transition: all 0.3s; color: #6b7280; text-transform: uppercase; font-size: 10px; font-weight: bold; border-bottom: 2px solid transparent; }
-        .nav-btn:hover { color: #00f2ff; }
+        /* Navegación */
+        .active-tab { border-bottom: 2px solid #00f2ff !important; background: linear-gradient(to top, rgba(0, 242, 255, 0.1), transparent); color: #fff !important; }
+        iframe { width: 100%; height: calc(100vh - 50px); border: none; background: #000; }
+        .nav-btn { transition: all 0.3s; color: #4b5563; text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+        .nav-btn:hover { color: #00f2ff; background: rgba(255,255,255,0.05); }
 
-        /* Avatar Styling */
-        .avatar-glow { border: 1px solid #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+        /* Avatar Glow */
+        .avatar-frame { border: 2px solid #00f2ff; padding: 2px; border-radius: 50%; box-shadow: 0 0 10px rgba(0, 242, 255, 0.4); }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -46,57 +47,66 @@
     <div id="auth-overlay">
         <div class="login-card">
             <div class="reticle-container" id="scanner-group">
-                <div class="reticle"></div>
-                <div class="scan-line-eye"></div>
-                <img src="kira.png" alt="KIRA" class="w-20 h-20 object-contain z-10 drop-shadow-[0_0_10px_rgba(0,242,255,0.5)]">
+                <div class="reticle-ring"></div>
+                <div class="reticle-scan"></div>
+                <div class="scan-line"></div>
+                <img src="kira.png" alt="KIRA" class="w-24 h-24 object-contain z-10 drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]">
             </div>
-            <h2 class="orbitron text-[10px] font-bold mb-6 tracking-[0.4em] text-cyan-500 uppercase">Neural Biometric Access</h2>
+            
+            <h2 class="orbitron text-[11px] font-bold mb-8 tracking-[0.5em] text-cyan-500 uppercase">Neural Identity Scan</h2>
+            
             <div class="space-y-4">
-                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400 transition-all">
-                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400 transition-all">
-                <div class="flex gap-2">
-                    <button onclick="checkPass()" class="flex-1 bg-cyan-900/20 border border-cyan-500 text-cyan-500 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron uppercase">Grant Access</button>
-                    <button onclick="startEyeScan()" class="w-14 bg-black border border-cyan-500/50 rounded flex items-center justify-center text-xl hover:bg-cyan-500/20 transition-all shadow-inner">👁️</button>
+                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black/50 border border-cyan-900/50 p-4 rounded-lg text-[10px] tracking-widest outline-none focus:border-cyan-400 text-cyan-400 transition-all">
+                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/50 border border-cyan-900/50 p-4 rounded-lg text-[10px] tracking-widest outline-none focus:border-cyan-400 text-cyan-400 transition-all">
+                
+                <div class="flex gap-3">
+                    <button onclick="checkPass()" class="flex-1 bg-cyan-600/10 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold py-4 rounded-lg hover:bg-cyan-500 hover:text-black transition-all orbitron uppercase tracking-widest">Login</button>
+                    <button onclick="startEyeScan()" class="w-16 bg-black border border-cyan-500/30 rounded-lg flex items-center justify-center text-xl hover:border-cyan-400 transition-all">👁️</button>
                 </div>
-                <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4 tracking-widest">Awaiting Biometric Data...</p>
+                <p id="auth-msg" class="text-[9px] text-cyan-900 uppercase mt-4 font-bold">System Restricted</p>
             </div>
         </div>
     </div>
 
-    <nav class="flex bg-[#050505] border-b border-blue-900/30 h-[50px] items-center px-4">
-        <div class="flex items-center gap-3 pr-4 border-r border-gray-800">
-            <img id="main-logo" src="kira.png" alt="KIRA" class="w-8 h-8 object-contain">
-            <span class="text-[10px] font-bold tracking-widest orbitron">KIRA <span class="text-cyan-500">SYSTEMS</span></span>
+    <nav class="flex bg-[#020202] border-b border-cyan-950/50 h-[50px] items-center px-6">
+        <div class="flex items-center gap-4 pr-6 border-r border-gray-900">
+            <img id="main-logo" src="kira.png" alt="KIRA" class="w-7 h-7 object-contain">
+            <span class="text-[11px] font-bold tracking-[0.3em] orbitron uppercase text-white">Kira <span class="text-cyan-500 italic">Systems</span></span>
         </div>
-        <div class="flex h-full gap-1 ml-4">
-            <button onclick="loadModule('smc.html', this)" class="nav-btn px-6 h-full active-tab">🏛️ SMC Terminal</button>
-            <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">⚡ Radar Scalper</button>
-            <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">💎 Quantum Vault</button>
+
+        <div class="flex h-full gap-2 ml-6">
+            <button onclick="loadModule('smc.html', this)" class="nav-btn px-6 h-full active-tab">SMC Terminal</button>
+            <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">Radar Scalper</button>
+            <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">Quantum Vault</button>
         </div>
-        
+
         <div class="ml-auto flex items-center gap-4">
-            <div class="flex items-center gap-2">
-                <span class="text-[9px] text-gray-500 mono font-bold hidden sm:block">ADMIN_PRO</span>
-                <img src="kira-avatar.png" alt="User Avatar" class="w-8 h-8 rounded-full avatar-glow object-cover">
+            <span class="text-[9px] text-cyan-700 font-bold hidden md:block">MASTER_OPERATOR</span>
+            <div class="avatar-frame">
+                <img src="kira-avatar.png" alt="User" class="w-7 h-7 rounded-full object-cover">
             </div>
-            <button onclick="location.reload()" class="text-[9px] text-red-900 hover:text-red-500 font-bold uppercase transition-colors">Logout</button>
+            <button onclick="location.reload()" class="text-red-900 hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
         </div>
     </nav>
 
-    <main id="view-container" class="bg-black flex-grow">
-        <iframe src="smc.html" id="main-frame" name="main-frame"></iframe>
+    <main class="flex-grow bg-black">
+        <iframe src="smc.html" id="main-frame"></iframe>
     </main>
 
     <script>
         function startEyeScan() {
             const msg = document.getElementById('auth-msg');
             document.getElementById('scanner-group').classList.add('scanning');
-            msg.innerText = "ANALYZING RETINA PATTERN...";
-            msg.className = "text-[8px] text-cyan-400 animate-pulse uppercase mt-4 tracking-widest";
+            msg.innerText = ">> ANALYZING RETINA PATTERN...";
+            msg.classList.add('text-cyan-400', 'animate-pulse');
             
             setTimeout(() => { 
-                msg.innerText = "IDENTITY CONFIRMED"; 
-                msg.className = "text-[8px] text-green-500 uppercase mt-4 tracking-widest";
+                msg.innerText = ">> IDENTITY VERIFIED"; 
+                msg.classList.replace('text-cyan-400', 'text-green-500');
                 setTimeout(unlockDashboard, 800); 
             }, 2200);
         }
@@ -108,14 +118,14 @@
                 unlockDashboard();
             } else {
                 const msg = document.getElementById('auth-msg');
-                msg.innerText = "ACCESS DENIED";
-                msg.className = "text-[8px] text-red-600 uppercase mt-4 tracking-widest";
+                msg.innerText = ">> ACCESS DENIED";
+                msg.classList.add('text-red-600');
             }
         }
 
         function unlockDashboard() {
             const overlay = document.getElementById('auth-overlay');
-            overlay.style.transform = "translateY(-100%)";
+            overlay.style.transform = "scale(1.2)";
             overlay.style.opacity = "0";
             setTimeout(() => { 
                 overlay.style.display = 'none'; 
@@ -125,9 +135,7 @@
 
         function loadModule(file, btn) {
             const frame = document.getElementById('main-frame');
-            frame.style.opacity = "0.2";
             frame.src = "./" + file;
-            frame.onload = () => { frame.style.opacity = "1"; };
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
             btn.classList.add('active-tab');
         }
