@@ -1,55 +1,61 @@
-<script>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIRA ORACLE</title>
+    <style>
+        body { background: #050505; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100-vh; margin: 0; }
+        .card { border: 1px solid #1f2937; padding: 30px; border-radius: 15px; text-align: center; background: #000; width: 90%; max-width: 400px; }
+        #connection-status { width: 15px; height: 15px; background: red; border-radius: 50%; display: inline-block; margin-bottom: 10px; }
+        #price-display { font-size: 50px; font-weight: bold; margin: 10px 0; font-family: monospace; }
+        .label { color: #3b82f6; font-size: 12px; letter-spacing: 2px; font-weight: bold; }
+        #last-update { color: #4b5563; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div id="connection-status"></div>
+        <div class="label">NEURAL LINK STATUS</div>
+        <div id="price-display">0.00000</div>
+        <div id="last-update">ESPERANDO PULSO...</div>
+        <div id="fvg-signal" style="margin-top: 15px; font-size: 12px; color: #10b981;"></div>
+    </div>
+
+    <script>
         const BIN_URL = 'https://api.npoint.io/50a3a47c4e1b58827a76';
 
-        async function updateKira() {
+        async function syncKira() {
             try {
-                // Forzamos la petición con modo 'cors' y quitamos el cache
-                const response = await fetch(BIN_URL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) throw new Error("Error de Red");
-                
-                const data = await response.json();
+                // El ?t= evita que el navegador guarde versiones viejas
+                const res = await fetch(BIN_URL + '?t=' + Date.now());
+                const data = await res.json();
 
                 if (data && data.precio) {
-                    // 1. ACTUALIZAR PRECIO
-                    const precio = document.getElementById('price-display');
-                    precio.innerText = data.precio;
-                    precio.style.color = "#fff"; // Asegurar que sea blanco
-
-                    // 2. ACTUALIZAR ESTADO
-                    document.getElementById('last-ts').innerText = "ÚLTIMO PULSO: " + (data.last_update || "Recibiendo...");
+                    // Actualizar UI
+                    document.getElementById('price-display').innerText = data.precio;
+                    document.getElementById('last-update').innerText = "SINCRO: " + (data.last_update || "OK");
                     
-                    // 3. NEURAL LINK A VERDE
+                    // Luz Verde
                     const status = document.getElementById('connection-status');
                     status.style.background = "#10b981";
                     status.style.boxShadow = "0 0 15px #10b981";
 
-                    // 4. ACTUALIZAR SEÑAL
-                    const sigCont = document.getElementById('signals-container');
+                    // Señal
                     if (data.fvg && data.fvg.includes("DETECTADO")) {
-                        sigCont.innerHTML = `<div style="color: #10b981; font-weight: bold; border-left: 2px solid #10b981; padding-left: 10px;">${data.fvg}</div>`;
-                    } else {
-                        sigCont.innerHTML = "<span style='color: #4b5563;'>Sincronizado. Buscando FVG...</span>";
+                        document.getElementById('fvg-signal').innerText = data.fvg;
                     }
                 }
-            } catch (err) {
-                console.error("Error de enlace:", err);
-                // Si falla, vuelve a rojo
-                const status = document.getElementById('connection-status');
-                status.style.background = "red";
-                status.style.boxShadow = "none";
+            } catch (e) {
+                document.getElementById('connection-status').style.background = "red";
+                document.getElementById('connection-status').style.boxShadow = "none";
             }
         }
 
-        // Ejecutar inmediatamente y luego cada 3 segundos
-        updateKira();
-        setInterval(updateKira, 3000);
-</script>
+        // Bucle de 3 segundos
+        setInterval(syncKira, 3000);
+        syncKira();
+    </script>
+</body>
+</html>
