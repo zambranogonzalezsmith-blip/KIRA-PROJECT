@@ -1,79 +1,55 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRA ORACLE | Live</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body style="background-color: #050505; color: white; margin: 0; font-family: sans-serif;">
-
-    <div style="padding: 20px; max-width: 1200px; margin: auto;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid #1f2937; padding: 15px; border-radius: 10px; background: #000;">
-            <div>
-                <h1 style="color: #3b82f6; margin: 0; font-size: 20px;">KIRA ORACLE V2</h1>
-                <small style="color: #6b7280;">SINCRO: NPOINT-LINK</small>
-            </div>
-            <div style="text-align: right;">
-                <span style="font-size: 10px; color: #6b7280; display: block;">LINK NEURAL</span>
-                <div id="connection-status" style="width: 12px; height: 12px; background: red; border-radius: 50%; margin-left: auto;"></div>
-            </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px;">
-            
-            <div style="background: #111827; padding: 20px; border-radius: 10px; border: 1px solid #1f2937; text-align: center;">
-                <span style="color: #3b82f6; font-size: 12px; font-weight: bold;">PRECIO EUR/USD</span>
-                <div id="price-display" style="font-size: 48px; font-weight: bold;">0.00000</div>
-                <div id="last-ts" style="color: #6b7280; font-size: 12px;">Esperando datos...</div>
-            </div>
-
-            <div id="signal-card" style="background: #000; padding: 20px; border-radius: 10px; border: 1px solid #1f2937;">
-                <h2 style="font-size: 12px; color: #3b82f6; margin-bottom: 10px;">ESTADO DE SEÑAL</h2>
-                <div id="signals-container" style="color: #6b7280; font-style: italic;">Escaneando mercado...</div>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
+<script>
         const BIN_URL = 'https://api.npoint.io/50a3a47c4e1b58827a76';
 
         async function updateKira() {
             try {
-                // Forzamos que no guarde cache con ?t=
-                const response = await fetch(`${BIN_URL}?t=${Date.now()}`);
-                if (!response.ok) return;
+                // Forzamos la petición con modo 'cors' y quitamos el cache
+                const response = await fetch(BIN_URL, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error("Error de Red");
                 
                 const data = await response.json();
 
                 if (data && data.precio) {
-                    // Actualizar UI
-                    document.getElementById('price-display').innerText = data.precio;
-                    document.getElementById('last-ts').innerText = "ACTUALIZADO: " + (data.last_update || "--");
-                    
-                    // Cambiar luz a verde
-                    document.getElementById('connection-status').style.background = "#10b981";
-                    document.getElementById('connection-status').style.boxShadow = "0 0 10px #10b981";
+                    // 1. ACTUALIZAR PRECIO
+                    const precio = document.getElementById('price-display');
+                    precio.innerText = data.precio;
+                    precio.style.color = "#fff"; // Asegurar que sea blanco
 
-                    // Mostrar señal si existe
+                    // 2. ACTUALIZAR ESTADO
+                    document.getElementById('last-ts').innerText = "ÚLTIMO PULSO: " + (data.last_update || "Recibiendo...");
+                    
+                    // 3. NEURAL LINK A VERDE
+                    const status = document.getElementById('connection-status');
+                    status.style.background = "#10b981";
+                    status.style.boxShadow = "0 0 15px #10b981";
+
+                    // 4. ACTUALIZAR SEÑAL
                     const sigCont = document.getElementById('signals-container');
                     if (data.fvg && data.fvg.includes("DETECTADO")) {
-                        sigCont.innerHTML = `<b style="color: #10b981;">${data.fvg}</b>`;
+                        sigCont.innerHTML = `<div style="color: #10b981; font-weight: bold; border-left: 2px solid #10b981; padding-left: 10px;">${data.fvg}</div>`;
                     } else {
-                        sigCont.innerHTML = "Sin señales claras";
+                        sigCont.innerHTML = "<span style='color: #4b5563;'>Sincronizado. Buscando FVG...</span>";
                     }
                 }
             } catch (err) {
-                document.getElementById('connection-status').style.background = "red";
-                document.getElementById('connection-status').style.boxShadow = "none";
+                console.error("Error de enlace:", err);
+                // Si falla, vuelve a rojo
+                const status = document.getElementById('connection-status');
+                status.style.background = "red";
+                status.style.boxShadow = "none";
             }
         }
 
-        // Ejecutar cada 2 segundos
-        setInterval(updateKira, 2000);
+        // Ejecutar inmediatamente y luego cada 3 segundos
         updateKira();
-    </script>
-</body>
-</html>
+        setInterval(updateKira, 3000);
+</script>
