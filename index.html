@@ -7,15 +7,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #010101; color: #cfcfcf; font-family: 'JetBrains Mono', monospace; scroll-behavior: smooth; }
+        body { background: #010101; color: #cfcfcf; font-family: 'JetBrains Mono', monospace; scroll-behavior: smooth; overflow: hidden; }
         .kira-border { border: 1px solid #1f2937; }
         .glow-gold { box-shadow: 0 0 15px rgba(234, 179, 8, 0.1); }
+        .glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); animation: pulseGreen 2s infinite; }
+        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); animation: pulseRed 2s infinite; }
+        
         .data-cell { background: #0a0a0a; border: 1px solid #1f2937; padding: 4px; border-radius: 4px; }
         .label { font-size: 8px; color: #6b7280; text-transform: uppercase; font-weight: bold; }
         .value { font-size: 11px; font-weight: bold; color: #e5e7eb; }
-        .blink { animation: blinker 1.5s linear infinite; }
+        
+        /* Animaciones de Alerta */
         @keyframes blinker { 50% { opacity: 0.3; } }
-        /* Custom Scrollbar */
+        @keyframes pulseGreen { 0% { border-color: #22c55e; } 50% { border-color: #86efac; } 100% { border-color: #22c55e; } }
+        @keyframes pulseRed { 0% { border-color: #ef4444; } 50% { border-color: #fca5a5; } 100% { border-color: #ef4444; } }
+        .blink { animation: blinker 1.5s linear infinite; }
+
+        /* Overlay de Inicio */
+        #init-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #010101; }
         ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
@@ -23,198 +37,244 @@
 </head>
 <body class="min-h-screen flex flex-col p-2 bg-black overflow-y-auto">
 
+    <div id="init-overlay">
+        <h1 class="text-3xl text-blue-500 font-bold tracking-widest mb-4">KIRA QUANTUM v6.0</h1>
+        <button onclick="startSystem()" class="px-8 py-3 border border-blue-500 text-blue-400 font-bold hover:bg-blue-900/30 transition-all uppercase tracking-[0.2em]">
+            INITIALIZE SYSTEM
+        </button>
+        <p class="mt-4 text-[10px] text-gray-600">Audio Drivers & Neural Link Loading...</p>
+    </div>
+
     <nav class="flex bg-[#050505] border-b border-blue-900/30 p-2 gap-4 items-center sticky top-0 z-50">
         <div class="relative group">
             <button class="bg-blue-600/20 text-blue-400 text-[10px] px-4 py-1 rounded border border-blue-500/50 font-bold hover:bg-blue-500/30 transition-all uppercase">
                 📂 Módulos Kira
             </button>
             <div class="absolute left-0 mt-1 w-48 bg-[#0a0a0a] border border-gray-800 rounded shadow-xl hidden group-hover:block">
-                <a href="index.html" class="block px-4 py-2 text-[10px] text-blue-400 hover:bg-blue-900/20 border-b border-gray-900 uppercase font-bold">🏛️ Terminal SMC</a>
-                <a href="scalper.html" class="block px-4 py-2 text-[10px] text-green-400 hover:bg-green-900/20 uppercase font-bold">⚡ Radar Scalper</a>
+                <a href="#" class="block px-4 py-2 text-[10px] text-blue-400 hover:bg-blue-900/20 border-b border-gray-900 uppercase font-bold">🏛️ Terminal SMC</a>
             </div>
         </div>
         <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
-            Neural Link: <span id="link-status" class="text-green-500 animate-pulse font-black">ONLINE</span>
+            Neural Link: <span id="link-status" class="text-gray-500">OFFLINE</span>
             <span class="text-gray-700">|</span>
             <span class="text-blue-500" id="clock">00:00:00</span>
+            <span class="text-gray-700">|</span>
+            <span id="audio-status" class="text-red-500">🔇 MUTE</span>
         </div>
     </nav>
 
     <header class="flex justify-between items-center p-3 kira-border bg-[#050505] rounded-t-lg mt-2 mb-1">
         <div>
-            <h1 class="text-yellow-500 font-black tracking-widest text-sm uppercase">Kira Quantum <span class="text-white">v5.8</span></h1>
-            <span class="text-[8px] text-gray-500">GLOBAL MULTI-ASSET INSTITUTIONAL FEED</span>
+            <h1 class="text-yellow-500 font-black tracking-widest text-sm uppercase">Kira Quantum <span class="text-white">v6.0</span></h1>
+            <span class="text-[8px] text-gray-500">SMC ALGORITHMIC CONFIRMATION SYSTEM</span>
         </div>
         <div class="flex gap-6">
             <div class="flex flex-col items-end">
-                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">EURUSD Price</span>
-                <span id="market-price" class="text-white font-bold text-sm">0.00000</span>
-            </div>
-            <div class="flex flex-col items-end">
-                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">Spread Monitor</span>
-                <span class="text-blue-500 font-bold text-sm uppercase">Institutional</span>
+                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">EURUSD Feed</span>
+                <span id="market-price" class="text-white font-bold text-sm">Loading...</span>
             </div>
         </div>
     </header>
 
     <main class="grid grid-cols-1 lg:grid-cols-6 gap-2 mb-4">
         <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg flex flex-col gap-4 glow-gold h-fit">
-            <h2 class="text-yellow-500 text-[10px] font-bold border-b border-gray-800 pb-2 uppercase italic">Tactical Neural Setup</h2>
-            <div id="signal-display" class="p-3 bg-gray-900 rounded text-center text-xs text-gray-500 uppercase font-bold border border-gray-800 transition-all duration-500">
-                Awaiting Data Stream...
+            <h2 class="text-yellow-500 text-[10px] font-bold border-b border-gray-800 pb-2 uppercase italic">SMC Tactical Setup</h2>
+            
+            <div id="signal-display" class="p-4 bg-gray-900 rounded text-center text-sm text-gray-500 uppercase font-black border border-gray-800 transition-all duration-500">
+                CALIBRATING ALGORITHM...
+            </div>
+
+            <div class="bg-black/40 p-2 rounded border border-gray-900">
+                <p class="text-[8px] text-gray-500 uppercase mb-1">Confluencia Institucional:</p>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[9px] text-gray-400">1. DXY TREND</span>
+                    <span id="check-dxy" class="text-[9px] text-gray-600">WAITING</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[9px] text-gray-400">2. BIAS FLOW</span>
+                    <span id="check-bias" class="text-[9px] text-gray-600">WAITING</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div class="data-cell border-l-2 border-red-500">
-                    <p class="label">Volatility SL</p>
+                    <p class="label">Invalidation Point (SL)</p>
                     <p id="sl-price" class="value text-red-400">---</p>
                 </div>
                 <div class="data-cell border-l-2 border-blue-500">
-                    <p class="label">Optimized Entry</p>
+                    <p class="label">SMC Entry (OB)</p>
                     <p id="entry-price" class="value text-blue-400">---</p>
                 </div>
             </div>
 
             <div class="space-y-1">
                 <div class="flex justify-between p-2 data-cell bg-green-900/5">
-                    <span class="label text-green-600">Take Profit 1</span>
+                    <span class="label text-green-600">Target (Liquidity)</span>
                     <span id="tp1-val" class="value text-green-500">---</span>
                 </div>
-                <div class="flex justify-between p-2 data-cell">
-                    <span class="label text-blue-600">ATR/Volatility</span>
-                    <span id="atr-val" class="value text-blue-400">---</span>
-                </div>
-                <div class="flex justify-between p-2 data-cell">
-                    <span class="label text-gray-500">RSI Momentum</span>
-                    <span id="rsi-val" class="value text-white font-bold">---</span>
-                </div>
             </div>
-            
-            <textarea id="bank-notes" class="w-full bg-black border border-gray-800 text-[10px] p-2 text-gray-400 rounded h-20 resize-none outline-none focus:border-yellow-900/50" placeholder="Escribe tu análisis institucional aquí..."></textarea>
         </div>
 
-        <div class="lg:col-span-4 kira-border bg-black rounded-lg h-[500px] overflow-hidden">
+        <div class="lg:col-span-4 kira-border bg-black rounded-lg h-[450px] overflow-hidden relative">
             <div id="tradingview_main" class="h-full w-full"></div>
+            <div id="visual-alert" class="absolute top-2 right-2 px-3 py-1 bg-red-600 text-white text-[10px] font-bold hidden uppercase">
+                INSTITUTIONAL VOLUME DETECTED
+            </div>
         </div>
     </main>
 
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-2 pb-10">
-        
         <div class="bg-[#050505] kira-border p-4 rounded-lg">
-            <h2 class="text-blue-400 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Global Watchlist</h2>
+            <h2 class="text-blue-400 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Macro Correlation</h2>
             <div class="space-y-2">
                 <div class="flex justify-between text-[10px] border-b border-blue-900/30 pb-1 bg-blue-900/5 p-2 rounded items-center">
                     <span class="text-blue-400 font-black">DXY INDEX</span>
                     <span id="dxy-val" class="text-white font-bold">---</span>
-                    <span id="dxy-trend" class="text-[7px] px-2 py-0.5 bg-gray-800 rounded font-black">---</span>
                 </div>
                 <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
-                    <span class="text-yellow-500 font-bold">XAUUSD (ORO)</span>
-                    <span id="gold-price" class="text-white font-bold tracking-tighter">---</span>
-                </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
-                    <span class="text-orange-500 font-bold">WTI (PETROLEO)</span>
-                    <span id="oil-price" class="text-white font-bold tracking-tighter">---</span>
-                </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
-                    <span class="text-white font-bold">BITCOIN</span>
-                    <span id="btc-price" class="text-green-500 font-bold tracking-tighter">---</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg">
-            <h2 class="text-red-500 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Economic Analytics</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-black/50 p-3 rounded border border-gray-900">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] bg-red-900/30 text-red-500 px-2 rounded font-bold uppercase">High Impact</span>
-                        <span class="text-[8px] text-gray-600 font-bold uppercase">Filtro DXY</span>
-                    </div>
-                    <p class="text-[10px] text-gray-300 leading-tight">El Índice del Dólar actúa como filtro de confirmación para evitar trampas institucionales.</p>
-                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: DXY subiendo = Venta EURUSD/ORO.</div>
-                </div>
-                <div class="bg-black/50 p-3 rounded border border-gray-900">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] bg-blue-900/30 text-blue-500 px-2 rounded font-bold uppercase">System Info</span>
-                        <span class="text-[8px] text-gray-600 font-bold uppercase">Volatility Check</span>
-                    </div>
-                    <p class="text-[10px] text-gray-300 leading-tight">ATR calculado en M15 para asegurar que el Stop Loss soporte el ruido del mercado.</p>
-                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: SL adaptativo según el miedo del mercado.</div>
+                    <span class="text-yellow-500 font-bold">GOLD (XAU)</span>
+                    <span id="gold-price" class="text-white font-bold">---</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="text-center p-4 border-t border-gray-900 text-[8px] text-gray-700 uppercase tracking-[0.3em]">
-        Kira Neural Network - Multi-Asset Architecture v5.8 - 2026
-    </footer>
-
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // Reloj en tiempo real
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-        }
-        setInterval(updateClock, 1000);
+        // --- 1. SISTEMA DE AUDIO (Quantum Sound Engine) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioEnabled = false;
 
-        // TradingView Widget
+        function playTone(freq, type, duration) {
+            if (!audioEnabled) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; // 'sine', 'square', 'sawtooth'
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playAlertSound(isBullish) {
+            if (isBullish) {
+                // Sonido "High Tech" para Compra (Doble Beep Agudo)
+                playTone(800, 'sine', 0.1);
+                setTimeout(() => playTone(1200, 'sine', 0.3), 150);
+            } else {
+                // Sonido Grave para Venta
+                playTone(300, 'square', 0.1);
+                setTimeout(() => playTone(200, 'square', 0.4), 150);
+            }
+        }
+
+        function startSystem() {
+            document.getElementById('init-overlay').style.display = 'none';
+            audioCtx.resume();
+            audioEnabled = true;
+            document.getElementById('audio-status').innerText = "🔊 AUDIO ON";
+            document.getElementById('audio-status').className = "text-green-500 blink";
+            playTone(600, 'sine', 0.2); // Sonido de inicio
+            updateTerminal(); // Primera llamada inmediata
+        }
+
+        // --- 2. RELOJ ---
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // --- 3. TRADINGVIEW WIDGET ---
         new TradingView.widget({
             "autosize": true, "symbol": "FX:EURUSD", "interval": "15", "timezone": "Etc/UTC",
             "theme": "dark", "style": "1", "locale": "es", "toolbar_bg": "#000000",
             "enable_publishing": false, "hide_side_toolbar": false, "container_id": "tradingview_main",
-            "studies": ["STD;Fair_Value_Gap", "STD;Average_True_Range"]
+            "studies": ["STD;Fair_Value_Gap", "STD;Average_True_Range"] // Indicadores permitidos
         });
 
-        // Sincronización con el Cerebro Python
+        // --- 4. CEREBRO KIRA (Lógica + Fetch) ---
+        let lastSignalState = "WAIT"; // Memoria para no repetir sonido
+
         async function updateTerminal() {
+            const linkStatus = document.getElementById('link-status');
+            
             try {
+                // Simulamos conexión con API (Usando npoint como mock server)
                 const res = await fetch('https://api.npoint.io/50a3a47c4e1b58827a76?t=' + Date.now());
                 const data = await res.json();
 
-                // Datos de Cabecera y Precios
+                linkStatus.innerText = "CONNECTED";
+                linkStatus.className = "text-green-500 font-bold";
+
+                // Actualizar Datos Básicos
                 document.getElementById('market-price').innerText = data.p;
-                document.getElementById('gold-price').innerText = "$" + data.gold;
-                document.getElementById('oil-price').innerText = "$" + data.oil;
-                document.getElementById('btc-price').innerText = "$" + data.btc;
-                document.getElementById('atr-val').innerText = data.volatility;
-                document.getElementById('rsi-val').innerText = data.rsi;
-
-                // DXY Analytics
-                document.getElementById('dxy-val').innerText = data.dxy;
-                const dxyTrend = document.getElementById('dxy-trend');
-                dxyTrend.innerText = data.dxy_t;
-                dxyTrend.className = data.dxy_t === "BULLISH" ? "text-[7px] px-2 py-0.5 bg-green-900 text-green-400 rounded font-black" : "text-[7px] px-2 py-0.5 bg-red-900 text-red-400 rounded font-black";
-
-                // Lógica de Señales y Colores
-                const signalBox = document.getElementById('signal-display');
-                signalBox.innerText = `${data.bias} | ${data.sig}`;
-                
-                if(data.col === "green") {
-                    signalBox.className = "p-3 bg-green-900/20 border border-green-500 rounded text-center text-xs text-green-400 font-bold shadow-lg glow-green";
-                } else if(data.col === "red") {
-                    signalBox.className = "p-3 bg-red-900/20 border border-red-500 rounded text-center text-xs text-red-400 font-bold shadow-lg glow-red";
-                } else if(data.col === "orange") {
-                    signalBox.className = "p-3 bg-orange-900/20 border border-orange-500 rounded text-center text-xs text-orange-400 font-bold blink";
-                } else {
-                    signalBox.className = "p-3 bg-gray-900 border border-gray-700 rounded text-center text-xs text-gray-500 font-bold";
-                }
-
-                // Niveles de Trading
                 document.getElementById('sl-price').innerText = data.sl;
                 document.getElementById('entry-price').innerText = data.p;
                 document.getElementById('tp1-val').innerText = data.tp1;
+                document.getElementById('dxy-val').innerText = data.dxy;
+                document.getElementById('gold-price').innerText = "$" + data.gold;
 
-            } catch (e) { 
-                console.log("Kira Neural Syncing..."); 
-                document.getElementById('link-status').innerText = "SYNCING...";
-                document.getElementById('link-status').className = "text-yellow-500 animate-pulse font-black";
+                // --- ALGORITMO SMC (Check de Confluencia) ---
+                const signalBox = document.getElementById('signal-display');
+                const checkDxy = document.getElementById('check-dxy');
+                const checkBias = document.getElementById('check-bias');
+                const visualAlert = document.getElementById('visual-alert');
+
+                // 1. Mostrar estado de los filtros
+                checkDxy.innerText = data.dxy_t; 
+                checkDxy.className = data.dxy_t === "BULLISH" ? "text-[9px] text-green-500 font-bold" : "text-[9px] text-red-500 font-bold";
+                
+                checkBias.innerText = data.bias;
+                checkBias.className = data.bias === "ALCISTA" ? "text-[9px] text-green-500 font-bold" : "text-[9px] text-red-500 font-bold";
+
+                // 2. Lógica de Disparo (Trigger)
+                let currentSignal = "WAIT";
+                let boxClass = "p-4 bg-gray-900 border border-gray-700 text-gray-500";
+                
+                // CONDICIÓN DE COMPRA (SMC: DXY Bajista + Bias Alcista)
+                if (data.col === "green") {
+                    currentSignal = "BUY";
+                    signalBox.innerText = "🚀 LONG ENTRY CONFIRMED";
+                    boxClass = "p-4 bg-green-900/20 border-2 border-green-500 text-green-400 font-black glow-green";
+                    visualAlert.style.display = "block";
+                    visualAlert.className = "absolute top-2 right-2 px-3 py-1 bg-green-600 text-white text-[10px] font-bold uppercase blink";
+                    visualAlert.innerText = "INSTITUTIONAL BUY FLOW";
+                } 
+                // CONDICIÓN DE VENTA (SMC: DXY Alcista + Bias Bajista)
+                else if (data.col === "red") {
+                    currentSignal = "SELL";
+                    signalBox.innerText = "🔻 SHORT ENTRY CONFIRMED";
+                    boxClass = "p-4 bg-red-900/20 border-2 border-red-500 text-red-400 font-black glow-red";
+                    visualAlert.style.display = "block";
+                    visualAlert.className = "absolute top-2 right-2 px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase blink";
+                    visualAlert.innerText = "INSTITUTIONAL SELL FLOW";
+                } 
+                else {
+                    signalBox.innerText = "ANALYZING MARKET STRUCTURE...";
+                    visualAlert.style.display = "none";
+                }
+
+                signalBox.className = boxClass;
+
+                // 3. CONTROL DE SONIDO (Solo suena si la señal CAMBIA)
+                if (currentSignal !== "WAIT" && currentSignal !== lastSignalState) {
+                    playAlertSound(currentSignal === "BUY");
+                    console.log("KIRA ALERT: " + currentSignal);
+                }
+
+                lastSignalState = currentSignal; // Actualizar memoria
+
+            } catch (e) {
+                console.log("Reconnecting...", e);
+                linkStatus.innerText = "RECONNECTING...";
+                linkStatus.className = "text-yellow-500 animate-pulse";
             }
         }
 
-        setInterval(updateTerminal, 5000);
-        updateTerminal();
+        // Ejecutar ciclo cada 3 segundos
+        setInterval(updateTerminal, 3000);
     </script>
 </body>
-</html>
+        </html>
