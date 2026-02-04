@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIRA | NEURAL GATE ACCESS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        /* Efecto Escáner Logo */
+        @keyframes scan-glow {
+            0% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 15px #00f2ff); transform: scale(1.05); }
+            100% { filter: drop-shadow(0 0 2px #00f2ff); transform: scale(1); }
+        }
+        .kira-logo-active { animation: scan-glow 2s infinite ease-in-out; }
+
+        /* Retícula de Ojo / Escáner */
+        .reticle-container {
+            position: relative; width: 100px; height: 100px; margin: 0 auto 20px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .reticle {
+            position: absolute; inset: 0; border: 2px solid rgba(0, 242, 255, 0.2);
+            border-radius: 50%; animation: rotate 4s linear infinite;
+        }
+        .reticle::before {
+            content: ''; position: absolute; top: -5px; left: 50%; width: 10px; height: 10px;
+            background: #00f2ff; border-radius: 50%; box-shadow: 0 0 15px #00f2ff;
+        }
+        .scan-line-eye {
+            position: absolute; width: 100%; height: 2px; background: #00f2ff;
+            box-shadow: 0 0 10px #00f2ff; top: 50%; opacity: 0;
+        }
+        .scanning .scan-line-eye { animation: scan-eye 1.5s ease-in-out infinite; opacity: 1; }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes scan-eye { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
+
+        /* Pantalla de Bloqueo */
+        #auth-overlay {
+            position: fixed; inset: 0; background: radial-gradient(circle at center, #051015 0%, #000 100%);
+            z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 0.8s ease;
+        }
+        .login-card {
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #00f2ff33;
+            padding: 2.5rem; border-radius: 1.5rem; width: 380px; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .active-tab { border-bottom: 2px solid #00f2ff; background: rgba(0, 242, 255, 0.1); color: #fff !important; }
+        iframe { width: 100%; height: calc(100vh - 50px); border: none; }
+        .nav-btn { transition: all 0.3s; color: #6b7280; text-transform: uppercase; font-size: 10px; font-weight: bold; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <div id="auth-overlay">
+        <div class="login-card" id="card-box">
+            <div class="reticle-container" id="scanner-group">
+                <div class="reticle"></div>
+                <div class="scan-line-eye"></div>
+                <img src="kira.png" alt="KIRA" class="w-16 h-16 object-contain z-10">
+            </div>
+            
+            <h2 class="orbitron text-[10px] font-bold mb-6 tracking-[0.4em] text-cyan-500 uppercase">Biometric Retina Scan</h2>
+            
+            <div class="space-y-4">
+                <div class="flex flex-col gap-1">
+                    <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black/50 border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
+                    <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/50 border border-cyan-900/50 p-3 rounded text-[10px] mono outline-none focus:border-cyan-500 text-cyan-400">
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="checkPass()" class="flex-1 bg-cyan-900/20 border border-cyan-500 text-cyan-500 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron">GRANT ACCESS</button>
+                    <button onclick="startEyeScan()" class="w-14 bg-black border border-cyan-500/50 rounded flex items-center justify-center hover:bg-cyan-500/20 transition-all text-xl">
+                        👁️
+                    </button>
+                </div>
+                <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4 tracking-widest">System Offline</p>
+            </div>
+        </div>
+    </div>
+
+    <nav class="flex bg-[#050505] border-b border-gray-900 h-[50px] items-center px-4">
+        <div class="flex items-center gap-3 pr-4 border-r border-gray-800">
+            <img id="main-logo" src="kira.png" alt="KIRA" class="w-8 h-8 object-contain">
+            <span class="text-[10px] font-bold tracking-widest orbitron hidden md:block">KIRA <span class="text-cyan-500">SYSTEMS</span></span>
+        </div>
+
+        <div class="flex h-full gap-1 ml-4">
+            <button onclick="loadModule('index.html', this)" class="nav-btn px-6 h-full active-tab">🏛️ SMC Terminal</button>
+            <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">⚡ Radar Scalper</button>
+            <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">💎 Quantum Vault</button>
+        </div>
+
+        <div class="ml-auto flex items-center gap-4">
+            <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
+            <span class="text-[9px] text-gray-500 mono uppercase">Encrypted Session: Active</span>
+            <button onclick="location.reload()" class="text-[9px] text-red-900 hover:text-red-500 font-bold uppercase ml-4">Terminate</button>
+        </div>
+    </nav>
+
+    <main id="view-container">
+        <iframe src="index.html" id="main-frame"></iframe>
+    </main>
+
+    <script>
+        // --- LÓGICA DE ESCANEO DE OJO ---
+        function startEyeScan() {
+            const group = document.getElementById('scanner-group');
+            const msg = document.getElementById('auth-msg');
+            
+            group.classList.add('scanning');
+            msg.innerText = "ANALYZING RETINA PATTERN...";
+            msg.classList.add('text-cyan-500', 'animate-pulse');
+
+            // Simulación de escaneo neural
+            setTimeout(() => {
+                msg.innerText = "IDENTITY CONFIRMED. WELCOME ADMIN.";
+                msg.style.color = "#00f2ff";
+                
+                setTimeout(() => {
+                    unlockDashboard();
+                }, 1000);
+            }, 2500);
+        }
+
+        function checkPass() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === "admin" && p === "admin") {
+                unlockDashboard();
+            } else {
+                document.getElementById('auth-msg').innerText = "ERROR: WRONG CREDENTIALS";
+                document.getElementById('auth-msg').className = "text-[8px] text-red-600 uppercase mt-4";
+            }
+        }
+
+        function unlockDashboard() {
+            const overlay = document.getElementById('auth-overlay');
+            overlay.style.transform = "translateY(-100%)";
+            overlay.style.opacity = "0";
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('main-logo').classList.add('kira-logo-active');
+            }, 800);
+        }
+
+        function loadModule(file, btn) {
+            const frame = document.getElementById('main-frame');
+            frame.style.opacity = "0.3";
+            frame.src = file;
+            frame.onload = () => frame.style.opacity = "1";
+
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+            btn.classList.add('active-tab');
+        }
+    </script>
+</body>
+</html>
