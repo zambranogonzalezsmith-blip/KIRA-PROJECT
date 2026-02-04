@@ -17,8 +17,8 @@
 </head>
 <body class="h-screen flex flex-col p-2 overflow-hidden bg-black">
     <nav class="flex bg-[#050505] border-b border-blue-900/30 p-1 gap-2">
-    <button class="bg-blue-600/20 text-blue-400 text-[9px] px-3 py-1 rounded border border-blue-500/50 font-bold">TERMINAL INSTITUCIONAL</button>
-    <a href="scalper.html" class="bg-gray-900 text-gray-500 text-[9px] px-3 py-1 rounded border border-gray-800 hover:text-green-500 transition-all uppercase font-bold">Cambiar a Radar Scalper ⚡</a>
+        <button class="bg-blue-600/20 text-blue-400 text-[9px] px-3 py-1 rounded border border-blue-500/50 font-bold">TERMINAL INSTITUCIONAL</button>
+        <a href="scalper.html" class="bg-gray-900 text-gray-500 text-[9px] px-3 py-1 rounded border border-gray-800 hover:text-green-500 transition-all uppercase font-bold">Cambiar a Radar Scalper ⚡</a>
     </nav>
 
     <header class="flex justify-between items-center p-3 kira-border bg-[#050505] rounded-t-lg mb-1">
@@ -29,11 +29,11 @@
         <div class="flex gap-4 text-[10px]">
             <div class="flex flex-col items-end">
                 <span class="text-gray-600">MERCADO</span>
-                <span id="market-price" class="text-white font-bold">LOADING...</span>
+                <span id="market-price" class="text-white font-bold">0.00000</span>
             </div>
             <div class="flex flex-col items-end">
                 <span class="text-gray-600">VOLATILIDAD (ATR)</span>
-                <span id="atr-val" class="text-blue-400">---</span>
+                <span id="atr-val" class="text-blue-400">0.000000</span>
             </div>
         </div>
     </header>
@@ -43,14 +43,14 @@
         <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg flex flex-col gap-4 glow-gold">
             <div class="border-b border-gray-800 pb-2">
                 <h2 class="text-yellow-500 text-[10px] font-bold uppercase">Setup Táctico</h2>
-                <div id="signal-display" class="mt-2 p-2 bg-gray-900 rounded text-center text-xs text-gray-400 animate-pulse">
-                    ESPERANDO CÁLCULO ALGORÍTMICO...
+                <div id="signal-display" class="mt-2 p-2 bg-gray-900 rounded text-center text-xs text-gray-400 animate-pulse uppercase">
+                    SINCRONIZANDO CON KIRA...
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div class="data-cell border-l-2 border-red-500">
-                    <p class="label">STOP LOSS (PROTEGIDO)</p>
+                    <p class="label">STOP LOSS (ATR)</p>
                     <p id="sl-price" class="value text-red-400">---</p>
                 </div>
                 <div class="data-cell border-l-2 border-blue-500">
@@ -68,12 +68,12 @@
                 <div class="flex justify-between items-center data-cell">
                     <span class="label text-green-600">TP2 (STANDARD)</span>
                     <span id="tp2-val" class="value text-green-500">---</span>
-                    <span class="text-[8px] text-gray-500">1:3.5 RR</span>
+                    <span class="text-[8px] text-gray-500">1:4 RR</span>
                 </div>
                 <div class="flex justify-between items-center data-cell border border-yellow-900/30 bg-yellow-900/10">
-                    <span class="label text-yellow-500">TP3 (RUNNER)</span>
+                    <span class="label text-yellow-500">TP3 (RESERVADO)</span>
                     <span id="tp3-val" class="value text-yellow-400">---</span>
-                    <span class="text-[8px] text-gray-500">1:5 RR</span>
+                    <span class="text-[8px] text-gray-500">RUNNER</span>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // 1. INICIAR GRÁFICO LIMPIO
+        // 1. INICIAR GRÁFICO (M15 PARA INSTITUCIONAL)
         new TradingView.widget({
             "autosize": true,
             "symbol": "FX:EURUSD",
@@ -102,42 +102,46 @@
             "enable_publishing": false,
             "hide_side_toolbar": false,
             "container_id": "tradingview_kira",
-            "studies": ["STD;Fair_Value_Gap"]
+            "studies": ["STD;Fair_Value_Gap", "STD;Average_True_Range"]
         });
 
-        // 2. RECIBIR DATOS DEL ALGORITMO
+        // 2. CONEXIÓN AL CEREBRO HÍBRIDO
         async function fetchInstitutionalData() {
             try {
                 const res = await fetch('https://api.npoint.io/50a3a47c4e1b58827a76?t=' + Date.now());
                 const data = await res.json();
 
-                // Actualizar Header
-                document.getElementById('market-price').innerText = data.price;
-                document.getElementById('atr-val').innerText = data.volatility;
+                // Actualizar Header (Nuevos campos del data_bridge)
+                document.getElementById('market-price').innerText = data.p || "0.00000";
+                document.getElementById('atr-val').innerText = data.volatility || "0.000000";
 
-                // Actualizar Señal
+                // Actualizar Señal y Estilos Dinámicos
                 const signalBox = document.getElementById('signal-display');
-                signalBox.innerText = `${data.bias} | ${data.signal}`;
+                signalBox.innerText = `${data.bias} | ${data.sig}`;
+                signalBox.classList.remove('animate-pulse');
                 
-                if(data.bias.includes("ALCISTA")) {
+                if(data.col === "green") {
                     signalBox.className = "mt-2 p-2 bg-green-900/20 border border-green-500 rounded text-center text-xs text-green-400 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]";
-                } else if(data.bias.includes("BAJISTA")) {
+                } else if(data.col === "red") {
                     signalBox.className = "mt-2 p-2 bg-red-900/20 border border-red-500 rounded text-center text-xs text-red-400 font-bold shadow-[0_0_10px_rgba(239,68,68,0.2)]";
                 } else {
-                    signalBox.className = "mt-2 p-2 bg-gray-900 rounded text-center text-xs text-gray-500";
+                    signalBox.className = "mt-2 p-2 bg-gray-900 border border-gray-700 rounded text-center text-xs text-gray-500";
                 }
 
-                // Actualizar Niveles Matemáticos
-                const setup = data.trade_setup;
-                document.getElementById('sl-price').innerText = setup.sl;
-                document.getElementById('entry-price').innerText = setup.entry;
-                document.getElementById('tp1-val').innerText = setup.tp1;
-                document.getElementById('tp2-val').innerText = setup.tp2;
-                document.getElementById('tp3-val').innerText = setup.tp3;
+                // Actualizar Niveles (Nuevas claves del JSON unificado)
+                document.getElementById('sl-price').innerText = data.sl || "---";
+                document.getElementById('entry-price').innerText = data.p || "---";
+                document.getElementById('tp1-val').innerText = data.tp1 || "---";
+                document.getElementById('tp2-val').innerText = data.tp2 || "---";
+                document.getElementById('tp3-val').innerText = data.tp1; // Referencia rápida
 
-            } catch (e) { console.log("Waiting for institutional feed..."); }
+            } catch (e) { 
+                console.log("Kira: Reconectando al feed de datos..."); 
+            }
         }
 
+        // Ejecutar inmediatamente y luego cada 5 segundos
+        fetchInstitutionalData();
         setInterval(fetchInstitutionalData, 5000);
     </script>
 </body>
