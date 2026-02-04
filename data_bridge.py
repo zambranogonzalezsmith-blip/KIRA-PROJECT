@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# CONFIGURACIÓN DEL PUENTE
+# CONFIGURACIÓN DEL PUENTE (Usa tu URL de npoint)
 BIN_URL = "https://api.npoint.io/50a3a47c4e1b58827a76"
 
 def calculate_atr(df, period=14):
@@ -15,79 +15,77 @@ def calculate_atr(df, period=14):
     true_range = np.max(ranges, axis=1)
     return true_range.rolling(period).mean()
 
-def institutional_scan():
-    print("🏦 KIRA INSTITUTIONAL ALGO: INITIATING...")
+def run_neural_analysis():
+    print("🧠 KIRA NEURAL ENGINE: ANALYZING ALL TIMEFRAMES...")
     try:
-        # 1. Obtener Data Institucional (H1 para estructura, M15 para entrada)
+        # 1. DATA COLLECTION (M1 para Scalping, M15/H1 para Institucional)
         ticker = yf.Ticker("EURUSD=X")
-        df = ticker.history(period="5d", interval="15m")
+        df_m1 = ticker.history(period="1d", interval="1m")
+        df_m15 = ticker.history(period="5d", interval="15m")
         
-        if len(df) < 50: return
+        if df_m1.empty or df_m15.empty: 
+            print("❌ Error: Datos de mercado no disponibles.")
+            return
 
-        # 2. Calcular Volatilidad Bancaria (ATR)
-        df['ATR'] = calculate_atr(df)
-        current_atr = df['ATR'].iloc[-1]
-        last_price = df['Close'].iloc[-1]
+        # --- LÓGICA INSTITUCIONAL (H1/M15) ---
+        df_m15['ATR'] = calculate_atr(df_m15)
+        current_atr = df_m15['ATR'].iloc[-1]
+        last_price = df_m1['Close'].iloc[-1]
         
-        # 3. Detectar Estructura (Swing Highs/Lows)
-        last_high = df['High'].iloc[-5:-1].max()
-        last_low = df['Low'].iloc[-5:-1].min()
+        # Detección de Liquidez (Sweeps)
+        swing_high = df_m15['High'].iloc[-10:-1].max()
+        swing_low = df_m15['Low'].iloc[-10:-1].min()
         
-        # 4. Lógica de Entrada Sniper (SMC)
-        # Buscamos manipulación: Precio rompe un bajo pero cierra arriba (Sweep)
-        signal = "NEUTRAL (ESPERANDO LIQUIDEZ)"
-        bias = "RANGO"
-        sl_pips = 0.0
-        entry_price = 0.0
+        # --- LÓGICA SCALPING (M1) ---
+        delta = df_m1['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        rsi_val = 100 - (100 / (1 + rs)).iloc[-1]
+
+        # DETERMINACIÓN DE SEÑAL Y BIAS
+        bias = "NEUTRAL"
+        signal = "WAITING"
+        color = "gray"
         
-        # Algoritmo de Compra (Bullish Sniper)
-        if df['Low'].iloc[-1] < last_low and df['Close'].iloc[-1] > last_low:
-            signal = "BUY LIMIT (LIQUIDITY SWEEP)"
+        # Sniper Entry (Institutional Sweep + Scalp Confirmation)
+        if last_price < swing_low and rsi_val < 35:
             bias = "ALCISTA (INSTITUCIONAL)"
-            entry_price = last_price
-            # SL Matemático: Bajo de la vela + 1.5 veces el ATR (Para evitar stop hunt)
-            sl_price = df['Low'].iloc[-1] - (current_atr * 1.5)
-            tp1 = entry_price + (entry_price - sl_price) * 2  # Ratio 1:2
-            tp2 = entry_price + (entry_price - sl_price) * 3.5 # Ratio 1:3.5
-            tp3 = entry_price + (entry_price - sl_price) * 5  # Ratio 1:5 (Runner)
-
-        # Algoritmo de Venta (Bearish Sniper)
-        elif df['High'].iloc[-1] > last_high and df['Close'].iloc[-1] < last_high:
-            signal = "SELL LIMIT (LIQUIDITY SWEEP)"
+            signal = "SCALP BUY (OVERSOLD SWEEP)"
+            color = "green"
+        elif last_price > swing_high and rsi_val > 65:
             bias = "BAJISTA (INSTITUCIONAL)"
-            entry_price = last_price
-            # SL Matemático: Alto de la vela + 1.5 veces el ATR
-            sl_price = df['High'].iloc[-1] + (current_atr * 1.5)
-            tp1 = entry_price - (sl_price - entry_price) * 2
-            tp2 = entry_price - (sl_price - entry_price) * 3.5
-            tp3 = entry_price - (sl_price - entry_price) * 5
+            signal = "SCALP SELL (OVERBOUGHT SWEEP)"
+            color = "red"
 
-        else:
-            # Si no hay señal, calculamos niveles teóricos
-            sl_price = last_price - (current_atr * 2) # Referencial
-            tp1, tp2, tp3 = 0.0, 0.0, 0.0
+        # CÁLCULO DE NIVELES (Sniper Precision)
+        sl_dist = current_atr * 1.5
+        sl = last_price - sl_dist if "BUY" in signal or color == "green" else last_price + sl_dist
+        tp1 = last_price + (sl_dist * 2) if "BUY" in signal or color == "green" else last_price - (sl_dist * 2)
+        tp2 = last_price + (sl_dist * 4) if "BUY" in signal or color == "green" else last_price - (sl_dist * 4)
 
-        # 5. Formatear Paquete JSON Bancario
+        # 2. PAQUETE DE DATOS UNIFICADO
         payload = {
-            "price": "{:.5f}".format(last_price),
+            "p": "{:.5f}".format(last_price),
             "bias": bias,
-            "signal": signal,
-            "volatility": "{:.5f}".format(current_atr),
-            "trade_setup": {
-                "entry": "{:.5f}".format(entry_price) if entry_price else "---",
-                "sl": "{:.5f}".format(sl_price),
-                "tp1": "{:.5f}".format(tp1) if tp1 else "---",
-                "tp2": "{:.5f}".format(tp2) if tp2 else "---",
-                "tp3": "{:.5f}".format(tp3) if tp3 else "---"
-            },
-            "timestamp": datetime.now().strftime("%H:%M:%S")
+            "sig": signal,
+            "rsi": "{:.2f}".format(rsi_val),
+            "volatility": "{:.6f}".format(current_atr),
+            "sl": "{:.5f}".format(sl),
+            "tp1": "{:.5f}".format(tp1),
+            "tp2": "{:.5f}".format(tp2),
+            "tp": "{:.5f}".format(tp1), # Para compatibilidad con scalper.html
+            "col": color,
+            "time": datetime.now().strftime("%H:%M:%S")
         }
 
-        requests.post(BIN_URL, json=payload, timeout=10)
-        print(f"✅ ALGO EXECUTION COMPLETED: {bias}")
+        # ENVIAR AL PUENTE
+        response = requests.post(BIN_URL, json=payload, timeout=10)
+        if response.status_code == 200:
+            print(f"✅ SINCRONIZACIÓN EXITOSA | P: {payload['p']} | RSI: {payload['rsi']}")
 
     except Exception as e:
-        print(f"❌ ERROR CRÍTICO: {e}")
+        print(f"❌ ERROR EN EL MOTOR: {e}")
 
 if __name__ == "__main__":
-    institutional_scan()
+    run_neural_analysis()
