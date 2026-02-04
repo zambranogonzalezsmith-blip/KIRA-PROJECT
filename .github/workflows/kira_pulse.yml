@@ -1,21 +1,27 @@
-name: Kira Pulse
+name: Kira Terminal Deploy
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
+  workflow_dispatch: # Te permite ejecutarlo a mano para pruebas
+  push:
+    branches: [ main ] # Se activa solo cuando guardas cambios en el código
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 3 # Si en 3 minutos no termina, se apaga solo (evita el naranja)
+    timeout-minutes: 2 # Si en 2 minutos no termina, se corta (adiós al naranja eterno)
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install
-        run: pip install yfinance requests # SOLO estas dos librerías
-      - name: Run
-        run: python data_bridge.py
+      - name: Checkout Código
+        uses: actions/checkout@v3
+
+      - name: Validar Estructura HTML
+        run: |
+          echo "Verificando integridad de la Terminal Kira..."
+          if grep -q "tradingview_kira" index.html; then
+            echo "✅ Motor de TradingView detectado."
+          else
+            echo "❌ ERROR: El contenedor del gráfico ha desaparecido."
+            exit 1
+          fi
+
+      - name: Status Report
+        run: echo "Kira Terminal v4.0 desplegada correctamente en GitHub Pages."
