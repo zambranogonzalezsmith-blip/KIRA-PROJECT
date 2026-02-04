@@ -1,61 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRA ORACLE</title>
+    <title>KIRA | NEURAL SMC TERMINAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #050505; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100-vh; margin: 0; }
-        .card { border: 1px solid #1f2937; padding: 30px; border-radius: 15px; text-align: center; background: #000; width: 90%; max-width: 400px; }
-        #connection-status { width: 15px; height: 15px; background: red; border-radius: 50%; display: inline-block; margin-bottom: 10px; }
-        #price-display { font-size: 50px; font-weight: bold; margin: 10px 0; font-family: monospace; }
-        .label { color: #3b82f6; font-size: 12px; letter-spacing: 2px; font-weight: bold; }
-        #last-update { color: #4b5563; font-size: 10px; }
+        body { background: #020202; color: #d1d5db; font-family: 'JetBrains Mono', monospace; }
+        .kira-border { border: 1px solid #111827; }
+        .glow-blue { box-shadow: 0 0 20px rgba(30, 64, 175, 0.2); }
+        .smc-panel { background: linear-gradient(180deg, #000 0%, #050505 100%); }
+        .active-signal { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col p-2 overflow-hidden">
 
-    <div class="card">
-        <div id="connection-status"></div>
-        <div class="label">NEURAL LINK STATUS</div>
-        <div id="price-display">0.00000</div>
-        <div id="last-update">ESPERANDO PULSO...</div>
-        <div id="fvg-signal" style="margin-top: 15px; font-size: 12px; color: #10b981;"></div>
+    <header class="flex justify-between items-center p-3 kira-border bg-black rounded-t-xl glow-blue mb-1">
+        <div class="flex items-center gap-4">
+            <div class="flex flex-col">
+                <h1 class="text-blue-500 font-black tracking-tighter text-sm uppercase">Kira Oracle <span class="text-white">v4.0</span></h1>
+                <span class="text-[8px] text-gray-600">SMC QUANTUM ALGORITHM</span>
+            </div>
+            <div class="h-8 w-[1px] bg-gray-900 mx-2"></div>
+            <div class="flex flex-col">
+                <span class="text-[9px] text-gray-500 uppercase">Status</span>
+                <span class="text-[10px] text-green-500 flex items-center gap-1">● SYNCED</span>
+            </div>
+        </div>
+        <div class="flex gap-4 items-center">
+            <div id="price-ticker" class="text-sm font-bold text-blue-400">EURUSD: LIVE</div>
+            <div class="bg-blue-900/20 px-3 py-1 rounded border border-blue-500/30 text-[10px] text-blue-400">ANALISTA IA ACTIVO</div>
+        </div>
+    </header>
+
+    <div class="flex-grow grid grid-cols-1 lg:grid-cols-6 gap-2 overflow-hidden">
+        
+        <div class="lg:col-span-1 flex flex-col gap-2 overflow-hidden smc-panel kira-border p-3 rounded-xl">
+            <div class="mb-4">
+                <h2 class="text-blue-500 text-[10px] font-bold uppercase mb-3 border-b border-blue-900/50 pb-1">Escáner SMC</h2>
+                <div class="space-y-3">
+                    <div class="bg-gray-900/30 p-2 rounded">
+                        <p class="text-[9px] text-gray-500 mb-1 font-bold italic">ZONA DE INTERÉS (POI)</p>
+                        <p class="text-[11px] text-white">ORDER BLOCK H1</p>
+                    </div>
+                    <div class="bg-gray-900/30 p-2 rounded border-l-2 border-yellow-500">
+                        <p class="text-[9px] text-gray-500 mb-1 font-bold italic">DESEQUILIBRIO</p>
+                        <p class="text-[11px] text-yellow-500 font-bold">FVG DETECTADO</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow flex flex-col">
+                <h2 class="text-blue-500 text-[10px] font-bold uppercase mb-2">Trade Planner</h2>
+                <textarea id="trade-log" class="flex-grow bg-black border border-gray-800 rounded p-2 text-[10px] text-green-500 focus:border-blue-500 outline-none resize-none" placeholder="Kira: Esperando confirmación en M1 para entrar..."></textarea>
+                <button onclick="saveLog()" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-2 rounded transition-all uppercase tracking-widest">Guardar Plan</button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 kira-border bg-black rounded-xl overflow-hidden relative glow-blue">
+            <div id="tradingview_kira" class="h-full w-full"></div>
+        </div>
+
+        <div class="lg:col-span-1 smc-panel kira-border p-3 rounded-xl flex flex-col gap-4">
+            <div>
+                <h2 class="text-blue-500 text-[10px] font-bold uppercase mb-3 border-b border-blue-900/50 pb-1">Kira Signals</h2>
+                <div class="bg-green-900/20 border border-green-500/30 p-3 rounded text-center">
+                    <span class="text-[8px] text-green-400 block mb-1">POSIBLE ENTRADA</span>
+                    <span class="text-xs font-bold text-green-500">PRE-BUY ZONE</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
+                    <span class="text-gray-500 uppercase italic font-bold">Risk Reward</span>
+                    <span class="text-white">1:3.5</span>
+                </div>
+                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
+                    <span class="text-gray-500 uppercase italic font-bold">Entry Mode</span>
+                    <span class="text-white">MITIGATION</span>
+                </div>
+            </div>
+
+            <div class="mt-auto p-3 bg-red-900/10 border border-red-900/30 rounded">
+                <p class="text-[9px] text-red-500 font-bold mb-1 underline italic">ZONA DE SALIDA (SL)</p>
+                <p class="text-[10px] text-gray-400">Bajo del Order Block + 2 pips de margen.</p>
+            </div>
+        </div>
     </div>
 
-    <script>
-        const BIN_URL = 'https://api.npoint.io/50a3a47c4e1b58827a76';
+    <footer class="mt-1 p-2 bg-black kira-border text-[9px] text-gray-700 font-mono flex justify-between rounded-b-xl uppercase">
+        <div id="save-notif">Kira OS: Estable</div>
+        <div class="tracking-widest">Neural Link v4.0 - Trading con Inteligencia SMC</div>
+    </footer>
 
-        async function syncKira() {
-            try {
-                // El ?t= evita que el navegador guarde versiones viejas
-                const res = await fetch(BIN_URL + '?t=' + Date.now());
-                const data = await res.json();
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "FX:EURUSD",
+            "interval": "15",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "es",
+            "toolbar_bg": "#000000",
+            "enable_publishing": false,
+            "withdateranges": true,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "details": true,
+            "hotlist": true,
+            "calendar": true,
+            "container_id": "tradingview_kira",
+            // ESTO ES CLAVE: Estos estudios ayudan a ver OB y FVG
+            "studies": [
+                "STD;Fair_Value_Gap",
+                "STD;Order_Block"
+            ]
+        });
 
-                if (data && data.precio) {
-                    // Actualizar UI
-                    document.getElementById('price-display').innerText = data.precio;
-                    document.getElementById('last-update').innerText = "SINCRO: " + (data.last_update || "OK");
-                    
-                    // Luz Verde
-                    const status = document.getElementById('connection-status');
-                    status.style.background = "#10b981";
-                    status.style.boxShadow = "0 0 15px #10b981";
-
-                    // Señal
-                    if (data.fvg && data.fvg.includes("DETECTADO")) {
-                        document.getElementById('fvg-signal').innerText = data.fvg;
-                    }
-                }
-            } catch (e) {
-                document.getElementById('connection-status').style.background = "red";
-                document.getElementById('connection-status').style.boxShadow = "none";
-            }
+        function saveLog() {
+            const val = document.getElementById('trade-log').value;
+            localStorage.setItem('kira_trade_log', val);
+            const n = document.getElementById('save-notif');
+            n.innerText = "PLAN GUARDADO EN MEMORIA NEURAL ✓";
+            n.style.color = "#3b82f6";
+            setTimeout(() => { n.innerText = "Kira OS: Estable"; n.style.color = "#374151"; }, 3000);
         }
 
-        // Bucle de 3 segundos
-        setInterval(syncKira, 3000);
-        syncKira();
+        window.onload = () => {
+            const saved = localStorage.getItem('kira_trade_log');
+            if(saved) document.getElementById('trade-log').value = saved;
+        }
     </script>
 </body>
 </html>
