@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRA | MULTI-ASSET TERMINAL</title>
+    <title>KIRA | GLOBAL INSTITUTIONAL TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -13,6 +13,8 @@
         .data-cell { background: #0a0a0a; border: 1px solid #1f2937; padding: 4px; border-radius: 4px; }
         .label { font-size: 8px; color: #6b7280; text-transform: uppercase; font-weight: bold; }
         .value { font-size: 11px; font-weight: bold; color: #e5e7eb; }
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.3; } }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #010101; }
@@ -31,15 +33,17 @@
                 <a href="scalper.html" class="block px-4 py-2 text-[10px] text-green-400 hover:bg-green-900/20 uppercase font-bold">⚡ Radar Scalper</a>
             </div>
         </div>
-        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest animate-pulse">
-            Neural Link: <span class="text-green-500">Online</span>
+        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
+            Neural Link: <span id="link-status" class="text-green-500 animate-pulse font-black">ONLINE</span>
+            <span class="text-gray-700">|</span>
+            <span class="text-blue-500" id="clock">00:00:00</span>
         </div>
     </nav>
 
     <header class="flex justify-between items-center p-3 kira-border bg-[#050505] rounded-t-lg mt-2 mb-1">
         <div>
-            <h1 class="text-yellow-500 font-black tracking-widest text-sm uppercase">Kira Quantum <span class="text-white">v5.5</span></h1>
-            <span class="text-[8px] text-gray-500">MULTI-ASSET INSTITUTIONAL FEED</span>
+            <h1 class="text-yellow-500 font-black tracking-widest text-sm uppercase">Kira Quantum <span class="text-white">v5.8</span></h1>
+            <span class="text-[8px] text-gray-500">GLOBAL MULTI-ASSET INSTITUTIONAL FEED</span>
         </div>
         <div class="flex gap-6">
             <div class="flex flex-col items-end">
@@ -47,8 +51,8 @@
                 <span id="market-price" class="text-white font-bold text-sm">0.00000</span>
             </div>
             <div class="flex flex-col items-end">
-                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">Gold (XAU)</span>
-                <span class="text-yellow-500 font-bold text-sm">TV Live</span>
+                <span class="text-gray-600 text-[8px] uppercase font-bold tracking-tighter">Spread Monitor</span>
+                <span class="text-blue-500 font-bold text-sm uppercase">Institutional</span>
             </div>
         </div>
     </header>
@@ -56,7 +60,7 @@
     <main class="grid grid-cols-1 lg:grid-cols-6 gap-2 mb-4">
         <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg flex flex-col gap-4 glow-gold h-fit">
             <h2 class="text-yellow-500 text-[10px] font-bold border-b border-gray-800 pb-2 uppercase italic">Tactical Neural Setup</h2>
-            <div id="signal-display" class="p-3 bg-gray-900 rounded text-center text-xs text-gray-500 uppercase font-bold border border-gray-800">
+            <div id="signal-display" class="p-3 bg-gray-900 rounded text-center text-xs text-gray-500 uppercase font-bold border border-gray-800 transition-all duration-500">
                 Awaiting Data Stream...
             </div>
 
@@ -77,12 +81,16 @@
                     <span id="tp1-val" class="value text-green-500">---</span>
                 </div>
                 <div class="flex justify-between p-2 data-cell">
-                    <span class="label text-blue-600">ATR Intelligence</span>
+                    <span class="label text-blue-600">ATR/Volatility</span>
                     <span id="atr-val" class="value text-blue-400">---</span>
+                </div>
+                <div class="flex justify-between p-2 data-cell">
+                    <span class="label text-gray-500">RSI Momentum</span>
+                    <span id="rsi-val" class="value text-white font-bold">---</span>
                 </div>
             </div>
             
-            <textarea class="w-full bg-black border border-gray-800 text-[10px] p-2 text-gray-400 rounded h-20 resize-none" placeholder="Escribe tu análisis aquí..."></textarea>
+            <textarea id="bank-notes" class="w-full bg-black border border-gray-800 text-[10px] p-2 text-gray-400 rounded h-20 resize-none outline-none focus:border-yellow-900/50" placeholder="Escribe tu análisis institucional aquí..."></textarea>
         </div>
 
         <div class="lg:col-span-4 kira-border bg-black rounded-lg h-[500px] overflow-hidden">
@@ -93,95 +101,116 @@
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-2 pb-10">
         
         <div class="bg-[#050505] kira-border p-4 rounded-lg">
-            <h2 class="text-blue-400 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase font-bold">Watchlist Institucional</h2>
+            <h2 class="text-blue-400 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Global Watchlist</h2>
             <div class="space-y-2">
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
+                <div class="flex justify-between text-[10px] border-b border-blue-900/30 pb-1 bg-blue-900/5 p-2 rounded items-center">
+                    <span class="text-blue-400 font-black">DXY INDEX</span>
+                    <span id="dxy-val" class="text-white font-bold">---</span>
+                    <span id="dxy-trend" class="text-[7px] px-2 py-0.5 bg-gray-800 rounded font-black">---</span>
+                </div>
+                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
                     <span class="text-yellow-500 font-bold">XAUUSD (ORO)</span>
-                    <span class="text-gray-400 tracking-tighter uppercase font-bold">High Demand</span>
+                    <span id="gold-price" class="text-white font-bold tracking-tighter">---</span>
                 </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
-                    <span class="text-orange-500 font-bold">WTI (PETRÓLEO)</span>
-                    <span class="text-gray-400 tracking-tighter uppercase font-bold">Supply Chain Risk</span>
+                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
+                    <span class="text-orange-500 font-bold">WTI (PETROLEO)</span>
+                    <span id="oil-price" class="text-white font-bold tracking-tighter">---</span>
                 </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
-                    <span class="text-blue-400 font-bold">GBPUSD</span>
-                    <span class="text-gray-400 tracking-tighter uppercase font-bold">Stable Range</span>
-                </div>
-                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1">
-                    <span class="text-white font-bold">BTCUSD</span>
-                    <span class="text-green-500 tracking-tighter uppercase font-bold">Bullish Momentum</span>
+                <div class="flex justify-between text-[10px] border-b border-gray-900 pb-1 p-1">
+                    <span class="text-white font-bold">BITCOIN</span>
+                    <span id="btc-price" class="text-green-500 font-bold tracking-tighter">---</span>
                 </div>
             </div>
         </div>
 
         <div class="lg:col-span-2 bg-[#050505] kira-border p-4 rounded-lg">
-            <h2 class="text-red-500 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase font-bold">Economic News & Impact Analytics</h2>
+            <h2 class="text-red-500 text-[10px] font-bold border-b border-gray-800 pb-2 mb-3 uppercase">Economic Analytics</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-black/50 p-2 rounded border border-gray-900">
+                <div class="bg-black/50 p-3 rounded border border-gray-900">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-[9px] bg-red-900/30 text-red-500 px-2 rounded font-bold uppercase">High Impact</span>
-                        <span class="text-[8px] text-gray-600 font-bold uppercase">IPC (Inflación)</span>
+                        <span class="text-[8px] text-gray-600 font-bold uppercase">Filtro DXY</span>
                     </div>
-                    <p class="text-[10px] text-gray-300 leading-tight">Publicación de datos de inflación en EE.UU. Posible aumento de tasas.</p>
-                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: Fortalecimiento del USD / Caída del Oro.</div>
+                    <p class="text-[10px] text-gray-300 leading-tight">El Índice del Dólar actúa como filtro de confirmación para evitar trampas institucionales.</p>
+                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: DXY subiendo = Venta EURUSD/ORO.</div>
                 </div>
-                <div class="bg-black/50 p-2 rounded border border-gray-900">
+                <div class="bg-black/50 p-3 rounded border border-gray-900">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-[9px] bg-orange-900/30 text-orange-500 px-2 rounded font-bold uppercase">Medium Impact</span>
-                        <span class="text-[8px] text-gray-600 font-bold uppercase">Inventarios Crudo</span>
+                        <span class="text-[9px] bg-blue-900/30 text-blue-500 px-2 rounded font-bold uppercase">System Info</span>
+                        <span class="text-[8px] text-gray-600 font-bold uppercase">Volatility Check</span>
                     </div>
-                    <p class="text-[10px] text-gray-300 leading-tight">Reducción inesperada de reservas en Cushing.</p>
-                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: Impulso alcista en Petróleo WTI.</div>
+                    <p class="text-[10px] text-gray-300 leading-tight">ATR calculado en M15 para asegurar que el Stop Loss soporte el ruido del mercado.</p>
+                    <div class="mt-2 text-[8px] text-blue-400 font-bold uppercase italic underline">Influencia: SL adaptativo según el miedo del mercado.</div>
                 </div>
             </div>
         </div>
     </section>
 
     <footer class="text-center p-4 border-t border-gray-900 text-[8px] text-gray-700 uppercase tracking-[0.3em]">
-        Kira Neural Network - Multi-Asset Architecture v5.5 - 2026
+        Kira Neural Network - Multi-Asset Architecture v5.8 - 2026
     </footer>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // 1. GRÁFICO MULTI-ACTIVO (Ajustado a EURUSD inicial)
+        // Reloj en tiempo real
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+
+        // TradingView Widget
         new TradingView.widget({
-            "autosize": true,
-            "symbol": "FX:EURUSD",
-            "interval": "15",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "es",
-            "toolbar_bg": "#000000",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "container_id": "tradingview_main",
+            "autosize": true, "symbol": "FX:EURUSD", "interval": "15", "timezone": "Etc/UTC",
+            "theme": "dark", "style": "1", "locale": "es", "toolbar_bg": "#000000",
+            "enable_publishing": false, "hide_side_toolbar": false, "container_id": "tradingview_main",
             "studies": ["STD;Fair_Value_Gap", "STD;Average_True_Range"]
         });
 
-        // 2. FETCH DATA UNIFICADO
+        // Sincronización con el Cerebro Python
         async function updateTerminal() {
             try {
                 const res = await fetch('https://api.npoint.io/50a3a47c4e1b58827a76?t=' + Date.now());
                 const data = await res.json();
 
-                document.getElementById('market-price').innerText = data.p || "0.00000";
-                document.getElementById('atr-val').innerText = data.volatility || "0.000000";
-                
+                // Datos de Cabecera y Precios
+                document.getElementById('market-price').innerText = data.p;
+                document.getElementById('gold-price').innerText = "$" + data.gold;
+                document.getElementById('oil-price').innerText = "$" + data.oil;
+                document.getElementById('btc-price').innerText = "$" + data.btc;
+                document.getElementById('atr-val').innerText = data.volatility;
+                document.getElementById('rsi-val').innerText = data.rsi;
+
+                // DXY Analytics
+                document.getElementById('dxy-val').innerText = data.dxy;
+                const dxyTrend = document.getElementById('dxy-trend');
+                dxyTrend.innerText = data.dxy_t;
+                dxyTrend.className = data.dxy_t === "BULLISH" ? "text-[7px] px-2 py-0.5 bg-green-900 text-green-400 rounded font-black" : "text-[7px] px-2 py-0.5 bg-red-900 text-red-400 rounded font-black";
+
+                // Lógica de Señales y Colores
                 const signalBox = document.getElementById('signal-display');
                 signalBox.innerText = `${data.bias} | ${data.sig}`;
                 
                 if(data.col === "green") {
-                    signalBox.className = "p-3 bg-green-900/10 border border-green-500/50 rounded text-center text-xs text-green-400 font-bold shadow-lg";
+                    signalBox.className = "p-3 bg-green-900/20 border border-green-500 rounded text-center text-xs text-green-400 font-bold shadow-lg glow-green";
                 } else if(data.col === "red") {
-                    signalBox.className = "p-3 bg-red-900/10 border border-red-500/50 rounded text-center text-xs text-red-400 font-bold shadow-lg";
+                    signalBox.className = "p-3 bg-red-900/20 border border-red-500 rounded text-center text-xs text-red-400 font-bold shadow-lg glow-red";
+                } else if(data.col === "orange") {
+                    signalBox.className = "p-3 bg-orange-900/20 border border-orange-500 rounded text-center text-xs text-orange-400 font-bold blink";
+                } else {
+                    signalBox.className = "p-3 bg-gray-900 border border-gray-700 rounded text-center text-xs text-gray-500 font-bold";
                 }
 
-                document.getElementById('sl-price').innerText = data.sl || "---";
-                document.getElementById('entry-price').innerText = data.p || "---";
-                document.getElementById('tp1-val').innerText = data.tp1 || "---";
+                // Niveles de Trading
+                document.getElementById('sl-price').innerText = data.sl;
+                document.getElementById('entry-price').innerText = data.p;
+                document.getElementById('tp1-val').innerText = data.tp1;
 
-            } catch (e) { console.log("Kira Syncing..."); }
+            } catch (e) { 
+                console.log("Kira Neural Syncing..."); 
+                document.getElementById('link-status').innerText = "SYNCING...";
+                document.getElementById('link-status').className = "text-yellow-500 animate-pulse font-black";
+            }
         }
 
         setInterval(updateTerminal, 5000);
