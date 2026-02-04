@@ -1,10 +1,10 @@
 <script>
-        // 1. Añadimos un timestamp para romper el cache del navegador
+        // 1. CONFIGURACIÓN DEL PUENTE CON CACHE-BUSTER
         const BIN_URL = 'https://api.npoint.io/50a3a47c4e1b58827a76';
         const connectionStatus = document.getElementById('connection-status');
         let lastCandle = null;
 
-        // 2. INICIALIZACIÓN GRÁFICO (Sin cambios)
+        // 2. INICIALIZACIÓN GRÁFICO
         const chartContainer = document.getElementById('chart');
         const chart = LightweightCharts.createChart(chartContainer, {
             layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#6b7280' },
@@ -19,69 +19,73 @@
             wickUpColor: '#10b981', wickDownColor: '#ef4444',
         });
 
-        // 3. LÓGICA DE ACTUALIZACIÓN CON "CACHE BUSTER"
+        // 3. FUNCIÓN DE ACTUALIZACIÓN FORZADA
         async function updateUI() {
             try {
-                // Añadimos ?t=... para que el navegador no use datos viejos
+                // El parámetro ?t= asegura que el navegador NO use datos viejos guardados
                 const response = await fetch(`${BIN_URL}?t=${new Date().getTime()}`, {
-                    method: 'GET',
-                    mode: 'cors',
+                    cache: 'no-store',
                     headers: { 'Content-Type': 'application/json' }
                 });
 
-                if (!response.ok) throw new Error("Error en servidor");
+                if (!response.ok) throw new Error("Servidor no responde");
                 
                 const data = await response.json();
 
-                if (!data || !data.precio) throw new Error("Datos incompletos");
+                if (data && data.precio) {
+                    const precioActual = parseFloat(data.precio);
+                    
+                    // CONEXIÓN EXITOSA: Punto VERDE
+                    connectionStatus.classList.remove('bg-red-500');
+                    connectionStatus.classList.add('bg-green-500');
 
-                const precioActual = parseFloat(data.precio);
-                
-                // ÉXITO: Cambiar a VERDE
-                connectionStatus.classList.remove('bg-red-500');
-                connectionStatus.classList.add('bg-green-500');
+                    // Actualizar Interfaz
+                    document.getElementById('price-display').innerText = precioActual.toFixed(5);
+                    document.getElementById('last-ts').innerText = data.last_update || "--:--";
+                    document.getElementById('display-riesgo').innerText = data.riesgo || "ESTABLE";
+                    
+                    // Lógica de Avatar y Señales
+                    const avatar = document.getElementById('kira-avatar');
+                    const sigCont = document.getElementById('signals-container');
 
-                document.getElementById('price-display').innerText = precioActual.toFixed(5);
-                document.getElementById('last-ts').innerText = data.last_update || "--:--";
-                document.getElementById('display-riesgo').innerText = data.riesgo || "ANALIZANDO";
-                
-                const avatar = document.getElementById('kira-avatar');
-                const sigCont = document.getElementById('signals-container');
+                    if (data.fvg && data.fvg.includes("DETECTADO")) {
+                        avatar.classList.add('kira-active');
+                        const colorClass = data.fvg.includes("COMPRA") ? "text-green-400 border-green-500" : "text-red-400 border-red-500";
+                        sigCont.innerHTML = `
+                            <div class="p-3 border-l-4 ${colorClass} bg-gray-800/40 rounded-r animate-pulse">
+                                <div class="text-[9px] text-gray-500 uppercase font-black">Oracle Signal</div>
+                                <div class="font-bold text-sm">${data.fvg}</div>
+                            </div>`;
+                    } else {
+                        avatar.classList.remove('kira-active');
+                        sigCont.innerHTML = `<div class="text-center text-gray-600 italic text-[10px] py-4">Escaneando mercado...</div>`;
+                    }
 
-                if (data.fvg && data.fvg.includes("DETECTADO")) {
-                    avatar.classList.add('kira-active');
-                    const colorClass = data.fvg.includes("COMPRA") ? "text-green-400 border-green-500" : "text-red-400 border-red-500";
-                    sigCont.innerHTML = `
-                        <div class="p-3 border-l-4 ${colorClass} bg-gray-800/40 rounded-r animate-pulse">
-                            <div class="text-[9px] text-gray-500 uppercase font-black">Oracle Signal</div>
-                            <div class="font-bold text-sm">${data.fvg}</div>
-                        </div>`;
-                } else {
-                    avatar.classList.remove('kira-active');
-                    sigCont.innerHTML = `<div class="text-center text-gray-600 italic text-[10px] py-4">Escaneando mercado...</div>`;
+                    // Actualizar Gráfico
+                    const time = Math.floor(Date.now() / 1000);
+                    if (!lastCandle || time > lastCandle.time + 60) {
+                        lastCandle = { time, open: precioActual, high: precioActual, low: precioActual, close: precioActual };
+                    } else {
+                        lastCandle.close = precioActual;
+                        lastCandle.high = Math.max(lastCandle.high, precioActual);
+                        lastCandle.low = Math.min(lastCandle.low, precioActual);
+                    }
+                    candleSeries.update(lastCandle);
                 }
-
-                const time = Math.floor(Date.now() / 1000);
-                if (!lastCandle) {
-                    lastCandle = { time, open: precioActual, high: precioActual, low: precioActual, close: precioActual };
-                } else {
-                    lastCandle.close = precioActual;
-                    lastCandle.high = Math.max(lastCandle.high, precioActual);
-                    lastCandle.low = Math.min(lastCandle.low, precioActual);
-                }
-                candleSeries.update(lastCandle);
 
             } catch (error) {
-                console.error("Fallo de enlace Kira:", error);
-                // ERROR: Volver a ROJO
+                console.warn("Reintentando pulso neural...");
+                // FALLO: Punto ROJO
                 connectionStatus.classList.remove('bg-green-500');
                 connectionStatus.classList.add('bg-red-500');
             }
         }
 
+        // Bucle de alta frecuencia (cada 2 segundos)
         setInterval(updateUI, 2000);
         updateUI();
 
+        // Gráfico responsivo
         new ResizeObserver(entries => {
             if (entries.length > 0 && entries[0].contentRect) {
                 chart.applyOptions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
