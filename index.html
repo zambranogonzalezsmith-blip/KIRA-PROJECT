@@ -7,9 +7,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
         body { background-color: #050505; color: #e2e2e2; font-family: 'Inter', sans-serif; overflow: hidden; margin: 0; }
@@ -44,12 +41,12 @@
     <header class="relative z-10 flex justify-between items-center mb-6 p-4 kira-border rounded-lg bg-black/80 backdrop-blur-sm">
         <div>
             <h1 class="text-2xl font-bold neon-text uppercase tracking-tighter">Kira Oracle <span class="text-blue-500 text-sm">V2.0</span></h1>
-            <p class="text-[10px] text-gray-500 font-mono tracking-widest">SINCRO: ROOT-NODE | PROYECTO: KIRA-PROJET</p>
+            <p class="text-[10px] text-gray-500 font-mono tracking-widest">SINCRO: NPOINT-LINK | PROYECTO: KIRA-PROJET</p>
         </div>
         <div class="flex gap-4 items-center">
             <div class="text-right">
                 <span class="block text-[9px] text-gray-500 uppercase font-bold">Neural Link</span>
-                <div id="connection-status" class="ml-auto w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <div id="connection-status" class="ml-auto w-2 h-2 rounded-full bg-red-500 animate-pulse transition-colors duration-500"></div>
             </div>
         </div>
     </header>
@@ -61,7 +58,7 @@
                 <h2 class="text-xs font-bold mb-3 text-blue-400 tracking-widest uppercase italic">Estado Neural</h2>
                 <div id="signals-container" class="space-y-3">
                     <div class="p-3 text-xs bg-gray-800/50 text-center text-gray-500 italic rounded">
-                        Esperando pulso de Kira...
+                        Sincronizando con el Oráculo...
                     </div>
                 </div>
             </div>
@@ -88,56 +85,50 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyBu6ChPonWQSKoTnXDaxdgGr4UKzZUiTHg",
-          authDomain: "kira-projet.firebaseapp.com",
-          databaseURL: "https://kira-projet-default-rtdb.firebaseio.com",
-          projectId: "kira-projet",
-          storageBucket: "kira-projet.firebasestorage.app",
-          messagingSenderId: "666447987197",
-          appId: "1:666447987197:web:2f9de6a52c32766c495994",
-          measurementId: "G-TEPVXE5NJN"
-        };
+        // --- 1. CONFIGURACIÓN DEL PUENTE ---
+        const BIN_URL = 'https://api.npoint.io/50a3a47c4e1b58827a76';
+        const connectionStatus = document.getElementById('connection-status');
+        let lastCandle = null;
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
+        // --- 2. INICIALIZACIÓN GRÁFICO ---
+        const chartContainer = document.getElementById('chart');
+        const chart = LightweightCharts.createChart(chartContainer, {
+            layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#6b7280' },
+            grid: { vertLines: { color: '#111827' }, horzLines: { color: '#111827' } },
+            rightPriceScale: { borderColor: '#1f2937', scaleMargins: { top: 0.1, bottom: 0.1 } },
+            timeScale: { borderColor: '#1f2937', timeVisible: true },
+        });
 
-            // --- 2. INICIALIZACIÓN GRÁFICO ---
-            const chartContainer = document.getElementById('chart');
-            const chart = LightweightCharts.createChart(chartContainer, {
-                layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#6b7280' },
-                grid: { vertLines: { color: '#111827' }, horzLines: { color: '#111827' } },
-                rightPriceScale: { borderColor: '#1f2937', scaleMargins: { top: 0.1, bottom: 0.1 } },
-                timeScale: { borderColor: '#1f2937', timeVisible: true },
-            });
+        const candleSeries = chart.addCandlestickSeries({
+            upColor: '#10b981', downColor: '#ef4444',
+            borderUpColor: '#10b981', borderDownColor: '#ef4444',
+            wickUpColor: '#10b981', wickDownColor: '#ef4444',
+        });
 
-            const candleSeries = chart.addCandlestickSeries({
-                upColor: '#10b981', downColor: '#ef4444',
-                borderUpColor: '#10b981', borderDownColor: '#ef4444',
-                wickUpColor: '#10b981', wickDownColor: '#ef4444',
-            });
+        // --- 3. LÓGICA DE ACTUALIZACIÓN ---
+        async function updateUI() {
+            try {
+                const response = await fetch(BIN_URL);
+                const data = await response.json();
 
-            // --- 3. LÓGICA DE ACTUALIZACIÓN ---
-            let lastCandle = null;
-            const connectionStatus = document.getElementById('connection-status');
-
-            function updateUI(data) {
-                if (!data || !data.precio) return;
+                if (!data || !data.precio) throw new Error("Datos incompletos");
 
                 const precioActual = parseFloat(data.precio);
                 
+                // Cambiar estado a Verde si hay respuesta exitosa
+                connectionStatus.classList.remove('bg-red-500');
+                connectionStatus.classList.add('bg-green-500');
+
                 // Actualizar textos
                 document.getElementById('price-display').innerText = precioActual.toFixed(5);
                 document.getElementById('last-ts').innerText = data.last_update || "--:--";
-                document.getElementById('display-riesgo').innerText = data.riesgo || "STANDBY";
+                document.getElementById('display-riesgo').innerText = data.riesgo || "ANALIZANDO";
                 
-                // Controlar Avatar y Señales
+                // Avatar y Señales
                 const avatar = document.getElementById('kira-avatar');
                 const sigCont = document.getElementById('signals-container');
 
-                if (data.fvg && typeof data.fvg === 'string' && data.fvg.includes("DETECTADO")) {
+                if (data.fvg && data.fvg.includes("DETECTADO")) {
                     avatar.classList.add('kira-active');
                     const colorClass = data.fvg.includes("COMPRA") ? "text-green-400 border-green-500" : "text-red-400 border-red-500";
                     sigCont.innerHTML = `
@@ -150,7 +141,7 @@
                     sigCont.innerHTML = `<div class="text-center text-gray-600 italic text-[10px] py-4">Escaneando mercado...</div>`;
                 }
 
-                // Simulación de Velas (Tick Chart)
+                // Vela en tiempo real
                 const time = Math.floor(Date.now() / 1000);
                 if (!lastCandle) {
                     lastCandle = { time, open: precioActual, high: precioActual, low: precioActual, close: precioActual };
@@ -160,39 +151,25 @@
                     lastCandle.low = Math.min(lastCandle.low, precioActual);
                 }
                 candleSeries.update(lastCandle);
-            }
 
-            // --- 4. ESCUCHA REALTIME (Conexión Directa) ---
-            console.log("Iniciando conexión a Firebase...");
-            
-            db.ref('/').on('value', (snapshot) => {
-                const data = snapshot.val();
-                console.log("🔥 Payload recibido:", data); // Debug en consola
-
-                if (data && data.precio) {
-                    // FORZAR VERDE
-                    connectionStatus.classList.remove('bg-red-500');
-                    connectionStatus.classList.add('bg-green-500');
-                    updateUI(data);
-                } else {
-                    console.log("Esperando datos válidos...");
-                }
-            }, (error) => {
-                console.error("Error de lectura:", error);
-                // FORZAR ROJO
+            } catch (error) {
+                console.error("Fallo de enlace:", error);
                 connectionStatus.classList.remove('bg-green-500');
                 connectionStatus.classList.add('bg-red-500');
-            });
-
-            // Ajuste responsivo del gráfico
-            new ResizeObserver(entries => {
-                if (entries.length === 0 || !entries[0].contentRect) return;
-                chart.applyOptions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
-            }).observe(chartContainer);
-
-        } catch (e) {
-            console.error("Error crítico en inicialización:", e);
+            }
         }
+
+        // Ejecutar bucle de actualización cada 2 segundos
+        setInterval(updateUI, 2000);
+        updateUI(); // Ejecución inmediata al cargar
+
+        // Ajuste responsivo del gráfico
+        new ResizeObserver(entries => {
+            if (entries.length > 0 && entries[0].contentRect) {
+                chart.applyOptions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+            }
+        }).observe(chartContainer);
+
     </script>
 </body>
 </html>
