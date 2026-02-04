@@ -3,7 +3,6 @@ name: Kira Institutional Algo
 on:
   workflow_dispatch:
   schedule:
-    # Se ejecuta cada 15 minutos (alineado con la temporalidad de entrada M15)
     - cron: '*/15 * * * *'
   push:
     branches: [ main ]
@@ -11,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # Tiempo suficiente para cálculos matemáticos complejos
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Código
@@ -21,13 +20,14 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          cache: 'pip' # Acelera las ejecuciones futuras
+          # HEMOS QUITADO LA LÍNEA DE CACHE PARA ELIMINAR EL ERROR
 
       - name: Instalar Librerías Cuánticas
         run: |
+          python -m pip install --upgrade pip
           pip install yfinance requests pandas numpy
 
       - name: Ejecutar Escáner de Liquidez
         run: python data_bridge.py
         env:
-          PYTHONUNBUFFERED: 1 # Permite ver los logs en tiempo real si hay errores
+          PYTHONUNBUFFERED: 1
