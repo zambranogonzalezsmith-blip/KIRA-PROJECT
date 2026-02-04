@@ -44,7 +44,7 @@
     <header class="relative z-10 flex justify-between items-center mb-6 p-4 kira-border rounded-lg bg-black/80 backdrop-blur-sm">
         <div>
             <h1 class="text-2xl font-bold neon-text uppercase tracking-tighter">Kira Oracle <span class="text-blue-500 text-sm">V2.0</span></h1>
-            <p class="text-[10px] text-gray-500 font-mono tracking-widest">PROYECTO: KIRA-PROJET | EURUSD</p>
+            <p class="text-[10px] text-gray-500 font-mono tracking-widest">SINCRO: ROOT-NODE | PROYECTO: KIRA-PROJET</p>
         </div>
         <div class="flex gap-4 items-center">
             <div class="text-right">
@@ -61,7 +61,7 @@
                 <h2 class="text-xs font-bold mb-3 text-blue-400 tracking-widest uppercase italic">Estado Neural</h2>
                 <div id="signals-container" class="space-y-3">
                     <div class="p-3 text-xs bg-gray-800/50 text-center text-gray-500 italic rounded">
-                        Sincronizando con Kira...
+                        Esperando pulso de Kira...
                     </div>
                 </div>
             </div>
@@ -88,7 +88,7 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE REAL ---
+        // --- 1. CONFIGURACIÓN FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyBu6ChPonWQSKoTnXDaxdgGr4UKzZUiTHg",
           authDomain: "kira-projet.firebaseapp.com",
@@ -119,10 +119,11 @@
                 wickUpColor: '#10b981', wickDownColor: '#ef4444',
             });
 
-            // --- 3. LÓGICA DE ACTUALIZACIÓN ---
             let lastCandle = null;
 
             function updateUI(data) {
+                if (!data.precio) return;
+
                 const precioActual = parseFloat(data.precio);
                 document.getElementById('price-display').innerText = precioActual.toFixed(5);
                 document.getElementById('last-ts').innerText = data.last_update || "--:--";
@@ -131,47 +132,46 @@
                 const avatar = document.getElementById('kira-avatar');
                 const sigCont = document.getElementById('signals-container');
 
-                // Lógica de reacción visual (Kira despierta si hay señal)
+                // Reacción visual de Kira
                 if (data.fvg && data.fvg.includes("DETECTADO")) {
                     avatar.classList.add('kira-active');
                     const colorClass = data.fvg.includes("COMPRA") ? "text-green-400 border-green-500" : "text-red-400 border-red-500";
-                    
                     sigCont.innerHTML = `
                         <div class="p-3 border-l-4 ${colorClass} bg-gray-800/40 rounded-r animate-pulse">
                             <div class="text-[9px] text-gray-500 uppercase font-black">Oracle Signal</div>
                             <div class="font-bold text-sm">${data.fvg}</div>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
                     avatar.classList.remove('kira-active');
                     sigCont.innerHTML = `<div class="text-center text-gray-600 italic text-[10px] py-4">Buscando ineficiencias...</div>`;
                 }
 
-                // Update Velas
+                // Actualización de Velas
+                const time = Math.floor(Date.now() / 1000);
                 if (!lastCandle) {
-                    let time = Math.floor(Date.now() / 1000);
                     lastCandle = { time, open: precioActual, high: precioActual, low: precioActual, close: precioActual };
                 } else {
                     lastCandle.close = precioActual;
                     lastCandle.high = Math.max(lastCandle.high, precioActual);
                     lastCandle.low = Math.min(lastCandle.low, precioActual);
-                    candleSeries.update(lastCandle);
+                    // Si pasa más de un minuto, podrías resetear lastCandle aquí
                 }
+                candleSeries.update(lastCandle);
             }
 
-            // --- 4. ESCUCHA REALTIME ---
-            db.ref('trading/EURUSD').on('value', (snapshot) => {
+            // --- 3. ESCUCHA REALTIME EN LA RAÍZ ---
+            // Importante: db.ref('/') debe coincidir con el db.reference('/') de Python
+            db.ref('/').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && data.precio) {
                     document.getElementById('connection-status').classList.replace('bg-red-500', 'bg-green-500');
                     updateUI(data);
                 }
             }, (error) => {
-                console.error("Error en Firebase:", error);
+                console.error("Error de Firebase:", error);
                 document.getElementById('connection-status').classList.replace('bg-green-500', 'bg-red-500');
             });
 
-            // Auto-ajuste de tamaño
             new ResizeObserver(entries => {
                 chart.applyOptions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
             }).observe(chartContainer);
