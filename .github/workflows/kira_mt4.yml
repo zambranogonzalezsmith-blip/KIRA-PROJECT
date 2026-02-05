@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Crucial para poder actualizar el HTML
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
@@ -27,3 +29,11 @@ jobs:
           MT5_TOKEN: ${{ secrets.MT5_TOKEN }}
           MT5_ACCOUNT_ID: ${{ secrets.MT5_ACCOUNT_ID }}
         run: python quantum_analysis.py
+
+      - name: Actualizar Dashboard HTML
+        run: |
+          git config --global user.name "Kira Bot"
+          git config --global user.email "kira@bot.com"
+          git add index.html
+          git commit -m "Kira: Actualización de estado y dashboard" || exit 0
+          git push
