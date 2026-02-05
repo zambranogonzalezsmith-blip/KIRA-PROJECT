@@ -1,0 +1,26 @@
+name: Kira Quantum Execution
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Se ejecuta cada 15 min
+  workflow_dispatch: # Permite ejecutarlo manualmente
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Arsenal
+        run: |
+          pip install pandas numpy pandas_ta metaapi-cloud-sdk
+
+      - name: Execute Quantum Brain
+        env:
+          MT5_TOKEN: ${{ secrets.MT5_TOKEN }} # Tu llave de Admirals/JustMarkets
+        run: python quantum_analysis.py
