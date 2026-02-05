@@ -2,42 +2,25 @@ import os
 import asyncio
 from metaapi_cloud_sdk import MetaApi
 import pandas as pd
+from datetime import datetime
 
 TOKEN = os.getenv('MT5_TOKEN')
 ACCOUNT_ID = os.getenv('MT5_ACCOUNT_ID')
 
-# Tu función HTML integrada
-def generar_reporte_html(symbol, precio, rsi, estado):
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Kira Quantum Dashboard</title>
-        <style>
-            body {{ font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }}
-            .card {{ background: #2d2d2d; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: inline-block; min-width: 300px; }}
-            .status {{ font-size: 1.2em; font-weight: bold; color: #00ff88; }}
-            .price {{ font-size: 2.5em; margin: 10px 0; color: #00d4ff; }}
-            .info {{ color: #bbb; margin-bottom: 20px; }}
-            .timestamp {{ font-size: 0.8em; color: #666; }}
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <h2>Kira Quantum Live</h2>
-            <p class="info">Activo: {symbol} | RSI: {rsi:.2f}</p>
-            <div class="price">${precio}</div>
-            <p class="status">Estado: {estado}</p>
-            <hr style="border: 0.5px solid #444;">
-            <p class="timestamp">Última actualización: {pd.Timestamp.now()}</p>
-        </div>
-    </body>
-    </html>
-    """
+def actualizar_hub_hibrido(symbol, precio, rsi, estado):
+    # Leemos tu HTML base (el diseño Cyberpunk)
+    with open("index.html", "r", encoding="utf-8") as f:
+        html = f.read()
+
+    # Inyectamos los datos en los contenedores específicos
+    # Buscamos etiquetas que crearemos en el paso 2
+    actualizado = html.replace("{{PRECIO}}", f"{precio:.2f}")
+    actualizado = actualizado.replace("{{RSI}}", f"{rsi:.2f}")
+    actualizado = actualizado.replace("{{ESTADO}}", estado)
+    actualizado = actualizado.replace("{{TIME}}", datetime.now().strftime('%H:%M:%S'))
+
     with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
+        f.write(actualizado)
 
 async def ejecutar_kira():
     api = MetaApi(TOKEN)
@@ -47,34 +30,30 @@ async def ejecutar_kira():
         connection = account.get_rpc_connection()
         await connection.connect()
 
-        symbol = 'XAUUSD' # Asegúrate que Just Markets use este nombre
+        symbol = 'XAUUSD' 
         candles = await connection.get_candles(symbol, '15m', None, 20)
         df = pd.DataFrame(candles)
         
-        # Cálculo simple de RSI
+        # Cálculo de RSI
         delta = df['close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi_actual = 100 - (100 / (1 + rs)).iloc[-1]
-        precio_actual = df['close'].iloc[-1]
+        rsi_val = 100 - (100 / (1 + (gain/loss))).iloc[-1]
         
-        estado = "Vigilando Mercado 💎"
-        
-        # Lógica de operación para capital pequeño
-        if rsi_actual < 30:
-            estado = "🚀 COMPRA ABIERTA"
-            await connection.create_market_buy_order(symbol, 0.01, 30, 60)
-        elif rsi_actual > 70:
-            estado = "📉 VENTA ABIERTA"
-            await connection.create_market_sell_order(symbol, 0.01, 30, 60)
+        precio = df['close'].iloc[-1]
+        estado = "Vigilando"
 
-        # Actualizamos el HTML con los datos reales
-        generar_reporte_html(symbol, precio_actual, rsi_actual, estado)
-        print(f"Dashboard actualizado: {precio_actual} - {estado}")
+        # Lógica de Trading (Capital Pequeño)
+        if rsi_val < 30:
+            await connection.create_market_buy_order(symbol, 0.01, 30, 60)
+            estado = "Comprando 🚀"
+        elif rsi_val > 70:
+            await connection.create_market_sell_order(symbol, 0.01, 30, 60)
+            estado = "Vendiendo 📉"
+
+        actualizar_hub_hibrido(symbol, precio, rsi_val, estado)
 
     except Exception as e:
-        generar_reporte_html("Error", 0, 0, f"Error: {str(e)}")
         print(f"Error: {e}")
 
 if __name__ == "__main__":
