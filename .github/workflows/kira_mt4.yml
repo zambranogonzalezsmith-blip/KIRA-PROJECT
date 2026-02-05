@@ -20,7 +20,7 @@ jobs:
       - name: Instalar Dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install metaapi-cloud-sdk pandas pandas-ta
+          pip install metaapi-cloud-sdk pandas
 
       - name: Ejecutar Cerebro Kira
         env:
