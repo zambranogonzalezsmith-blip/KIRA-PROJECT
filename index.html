@@ -11,14 +11,12 @@
         body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
         .orbitron { font-family: 'Orbitron', sans-serif; }
         
-        /* Animación de Pulso Logo */
         @keyframes scan-glow {
             0%, 100% { filter: drop-shadow(0 0 5px var(--cyan)); opacity: 0.8; }
             50% { filter: drop-shadow(0 0 15px var(--cyan)); opacity: 1; }
         }
         .kira-logo-active { animation: scan-glow 3s infinite ease-in-out; }
 
-        /* OJO DIGITAL CSS */
         .digital-eye {
             position: relative; width: 100px; height: 60px;
             background: rgba(0, 242, 255, 0.1); border-radius: 80% 10%;
@@ -37,7 +35,6 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Retícula de Escaneo */
         .reticle-container { position: relative; width: 160px; height: 160px; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; }
         .reticle-ring { position: absolute; inset: 0; border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 50%; }
         .reticle-scan { 
@@ -53,7 +50,6 @@
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes scan-move { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
 
-        /* Estructura UI */
         #auth-overlay { 
             position: fixed; inset: 0; background: radial-gradient(circle at center, #051218 0%, #000 100%); 
             z-index: 10000; display: flex; justify-content: center; align-items: center; 
@@ -70,8 +66,8 @@
         .active-tab { color: var(--cyan) !important; }
         .active-tab::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
 
-        iframe { width: 100%; height: calc(100vh - 50px); border: none; background: #000; }
-        .avatar-glow { border: 1px solid var(--cyan); padding: 2px; border-radius: 50%; }
+        .data-screen { height: calc(100vh - 50px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .panel { border: 1px solid rgba(0, 242, 255, 0.1); background: rgba(0, 242, 255, 0.02); width: 100%; max-width: 900px; padding: 3rem; border-radius: 4px; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -88,13 +84,10 @@
                     </div>
                 </div>
             </div>
-            
             <h2 class="orbitron text-[11px] font-bold mb-8 tracking-[0.4em] text-cyan-500 uppercase">Identity Confirmation</h2>
-            
             <div class="space-y-3">
                 <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none focus:border-cyan-500 text-cyan-400">
                 <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none focus:border-cyan-500 text-cyan-400">
-                
                 <div class="flex gap-2 pt-2">
                     <button onclick="checkPass()" class="flex-1 bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron uppercase">Access</button>
                     <button onclick="startEyeScan()" class="w-12 bg-black border border-cyan-500/30 rounded flex items-center justify-center hover:border-cyan-400 transition-all text-lg">👁️</button>
@@ -107,30 +100,38 @@
     <nav class="flex items-center px-6">
         <div class="flex items-center gap-3 pr-6 border-r border-zinc-900 h-full">
             <img id="main-logo" src="kira.png" alt="KIRA" class="w-6 h-6 object-contain">
-            <span class="text-[10px] font-bold tracking-[0.2em] orbitron uppercase">KIRA <span class="text-cyan-500">v6.0</span></span>
+            <span class="text-[10px] font-bold tracking-[0.2em] orbitron uppercase text-cyan-500">KIRA v6.0</span>
         </div>
-
         <div class="flex h-full ml-4">
-            <button onclick="loadModule('Kira mt4.html', this)" class="nav-btn px-6 h-full active-tab">Kira Neural</button>
-            <button onclick="loadModule('smc.html', this)" class="nav-btn px-6 h-full">SMC Terminal</button>
-            <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">Radar</button>
-            <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">The Vault</button>
-        </div>
-
-        <div class="ml-auto flex items-center gap-4">
-            <div class="avatar-glow">
-                <img src="kira-avatar.png" alt="Avatar" class="w-7 h-7 rounded-full object-cover">
-            </div>
-            <button onclick="location.reload()" class="text-zinc-700 hover:text-red-500 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-            </button>
+            <button class="nav-btn px-6 h-full active-tab">Kira Neural</button>
+            <button class="nav-btn px-6 h-full text-zinc-800 cursor-not-allowed">SMC Terminal</button>
         </div>
     </nav>
 
-    <main class="flex-grow">
-        <iframe src="Kira mt4.html" id="main-frame" name="main-frame"></iframe>
+    <main class="data-screen">
+        <div class="panel">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                <div>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Market Asset</p>
+                    <p class="text-4xl font-bold tracking-tighter">XAUUSD</p>
+                </div>
+                <div>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Quantum Price</p>
+                    <p class="text-4xl font-bold tracking-tighter text-cyan-400 italic">${{PRECIO}}</p>
+                </div>
+                <div>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Neural RSI</p>
+                    <p class="text-4xl font-bold tracking-tighter">{{RSI}}</p>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-white/5 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
+                    <p class="text-[10px] font-bold orbitron uppercase tracking-[0.2em]">{{ESTADO}}</p>
+                </div>
+                <p class="text-[8px] text-zinc-600 uppercase italic">Kira Neural Core // Link Stable</p>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -141,7 +142,6 @@
             scanner.classList.add('scanning');
             msg.innerText = ">> SCANNING RETINA PATTERN...";
             msg.style.color = "#00f2ff";
-            
             setTimeout(() => { 
                 msg.innerText = ">> IDENTITY VERIFIED. BIOMETRIC OK."; 
                 msg.style.color = "#22c55e";
@@ -150,9 +150,7 @@
         }
 
         function checkPass() {
-            const u = document.getElementById('user').value;
-            const p = document.getElementById('pass').value;
-            if(u === "admin" && p === "admin") {
+            if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "admin") {
                 unlock();
             } else {
                 msg.innerText = ">> AUTHENTICATION FAILURE";
@@ -168,17 +166,6 @@
                 overlay.style.display = 'none'; 
                 document.getElementById('main-logo').classList.add('kira-logo-active');
             }, 800);
-        }
-
-        function loadModule(file, btn) {
-            const frame = document.getElementById('main-frame');
-            frame.style.opacity = "0";
-            setTimeout(() => {
-                frame.src = file; // Carga el archivo desde el mismo nivel de directorio
-                frame.onload = () => frame.style.opacity = "1";
-            }, 200);
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
-            btn.classList.add('active-tab');
         }
     </script>
 </body>
