@@ -2,42 +2,41 @@ name: Kira Quantum Execution
 
 on:
   schedule:
-    # Se ejecuta cada 15 minutos, las 24 horas, de lunes a viernes (Mercado Abierto)
-    - cron: '*/15 * * 1-5'
-  workflow_dispatch:
-    # Permite que tú la despiertes manualmente cuando quieras probar algo
+    - cron: '*/15 * * * 1-5' # Cada 15 min, Lunes a Viernes
+  workflow_dispatch: # Ejecución manual
 
 jobs:
-  analyze:
-    name: "Cerebro Cuántico en Proceso"
+  run-quantum:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permiso vital para que Kira actualice el README
     
     steps:
-      - name: 📥 Clonando Repositorio
+      - name: 📥 Descargando Repositorio
         uses: actions/checkout@v4
 
       - name: 🐍 Configurando Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip' # Acelera las ejecuciones futuras
+          cache: 'pip'
 
       - name: 🛠️ Instalando Arsenal Quant
         run: |
           python -m pip install --upgrade pip
           pip install pandas numpy pandas_ta metaapi-cloud-sdk-python
 
-      - name: 🧠 Ejecutando Kira Quantum
+      - name: 🧠 Ejecutando Cerebro Quantum
         env:
           MT5_TOKEN: ${{ secrets.MT5_TOKEN }}
           MT5_ACCOUNT_ID: ${{ secrets.MT5_ACCOUNT_ID }}
         run: python quantum_analysis.py
 
-      - name: 📝 Actualizando Diario de Linaje
+      - name: 📝 Sincronizando Reporte
         if: always()
         run: |
           git config --local user.email "kira@quantum.ai"
-          git config --local user.name "Kira Quantum"
-          git add .
-          git commit -m "Kira Quantum: Análisis de mercado completado [Automático]" || echo "Sin cambios que reportar."
+          git config --local user.name "Kira Quantum Bot"
+          git add README.md
+          git commit -m "Kira Quantum: Actualización de métricas [skip ci]" || echo "Sin cambios"
           git push
