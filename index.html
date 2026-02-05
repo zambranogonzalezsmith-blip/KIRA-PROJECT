@@ -7,67 +7,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --dark-bg: #000508; }
+        :root { --cyan: #00f2ff; }
         body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
         .orbitron { font-family: 'Orbitron', sans-serif; }
         
-        @keyframes scan-glow {
-            0%, 100% { filter: drop-shadow(0 0 5px var(--cyan)); opacity: 0.8; }
-            50% { filter: drop-shadow(0 0 15px var(--cyan)); opacity: 1; }
-        }
+        @keyframes scan-glow { 0%, 100% { filter: drop-shadow(0 0 5px var(--cyan)); opacity: 0.8; } 50% { filter: drop-shadow(0 0 15px var(--cyan)); opacity: 1; } }
         .kira-logo-active { animation: scan-glow 3s infinite ease-in-out; }
 
-        .digital-eye {
-            position: relative; width: 100px; height: 60px;
-            background: rgba(0, 242, 255, 0.1); border-radius: 80% 10%;
-            transform: rotate(45deg); border: 2px solid var(--cyan);
-            overflow: hidden; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
-        }
-        .iris {
-            position: absolute; width: 40px; height: 40px;
-            background: radial-gradient(circle, var(--cyan) 20%, #000 70%);
-            border-radius: 50%; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); border: 1px solid var(--cyan);
-        }
-        .pupil {
-            position: absolute; width: 15px; height: 15px;
-            background: #000; border-radius: 50%; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-        }
+        .digital-eye { position: relative; width: 100px; height: 60px; background: rgba(0, 242, 255, 0.1); border-radius: 80% 10%; transform: rotate(45deg); border: 2px solid var(--cyan); overflow: hidden; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        .iris { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, var(--cyan) 20%, #000 70%); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid var(--cyan); }
+        .pupil { position: absolute; width: 15px; height: 15px; background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
         .reticle-container { position: relative; width: 160px; height: 160px; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; }
         .reticle-ring { position: absolute; inset: 0; border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 50%; }
-        .reticle-scan { 
-            position: absolute; inset: -5px; border: 2px dashed var(--cyan); 
-            border-radius: 50%; opacity: 0.3; animation: rotate 15s linear infinite; 
-        }
-        .scan-line { 
-            position: absolute; width: 100%; height: 2px; 
-            background: var(--cyan); box-shadow: 0 0 15px var(--cyan); top: 50%; opacity: 0; z-index: 30;
-        }
+        .reticle-scan { position: absolute; inset: -5px; border: 2px dashed var(--cyan); border-radius: 50%; opacity: 0.3; animation: rotate 15s linear infinite; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); top: 50%; opacity: 0; z-index: 30; }
         .scanning .scan-line { animation: scan-move 1.5s ease-in-out infinite; opacity: 1; }
         
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes scan-move { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
 
-        #auth-overlay { 
-            position: fixed; inset: 0; background: radial-gradient(circle at center, #051218 0%, #000 100%); 
-            z-index: 10000; display: flex; justify-content: center; align-items: center; 
-            transition: all 0.8s ease-in-out;
-        }
-        .login-card { 
-            background: rgba(0, 0, 0, 0.9); border: 1px solid rgba(0, 242, 255, 0.2); 
-            padding: 2.5rem; border-radius: 1rem; width: 380px; text-align: center; 
-            backdrop-filter: blur(10px);
-        }
+        #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #051218 0%, #000 100%); z-index: 10000; display: flex; justify-content: center; align-items: center; transition: all 0.8s ease-in-out; }
+        .login-card { background: rgba(0, 0, 0, 0.9); border: 1px solid rgba(0, 242, 255, 0.2); padding: 2.5rem; border-radius: 1rem; width: 380px; text-align: center; backdrop-filter: blur(10px); }
 
         nav { background: #020202; height: 50px; border-bottom: 1px solid #111; }
-        .nav-btn { position: relative; transition: all 0.3s; color: #555; text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
-        .active-tab { color: var(--cyan) !important; }
-        .active-tab::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
-
-        .data-screen { height: calc(100vh - 50px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
-        .panel { border: 1px solid rgba(0, 242, 255, 0.1); background: rgba(0, 242, 255, 0.02); width: 100%; max-width: 900px; padding: 3rem; border-radius: 4px; }
+        .panel { border: 1px solid rgba(0, 242, 255, 0.1); background: rgba(0, 242, 255, 0.02); padding: 2rem; border-radius: 4px; width: 100%; max-width: 800px; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -76,23 +40,19 @@
         <div class="login-card">
             <div class="flex justify-center">
                 <div class="reticle-container" id="scanner-group">
-                    <div class="reticle-ring"></div>
-                    <div class="reticle-scan"></div>
-                    <div class="scan-line"></div>
-                    <div class="digital-eye">
-                        <div class="iris"><div class="pupil"></div></div>
-                    </div>
+                    <div class="reticle-ring"></div><div class="reticle-scan"></div><div class="scan-line"></div>
+                    <div class="digital-eye"><div class="iris"><div class="pupil"></div></div></div>
                 </div>
             </div>
             <h2 class="orbitron text-[11px] font-bold mb-8 tracking-[0.4em] text-cyan-500 uppercase">Identity Confirmation</h2>
             <div class="space-y-3">
-                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none focus:border-cyan-500 text-cyan-400">
-                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none focus:border-cyan-500 text-cyan-400">
+                <input id="user" type="text" placeholder="OPERATOR ID" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none text-cyan-400">
+                <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none text-cyan-400">
                 <div class="flex gap-2 pt-2">
-                    <button onclick="checkPass()" class="flex-1 bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold py-3 rounded hover:bg-cyan-500 hover:text-black transition-all orbitron uppercase">Access</button>
-                    <button onclick="startEyeScan()" class="w-12 bg-black border border-cyan-500/30 rounded flex items-center justify-center hover:border-cyan-400 transition-all text-lg">👁️</button>
+                    <button onclick="checkPass()" class="flex-1 bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold py-3 rounded orbitron">ACCESS</button>
+                    <button onclick="startEyeScan()" class="w-12 bg-black border border-cyan-500/30 rounded text-lg">👁️</button>
                 </div>
-                <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4 tracking-[0.2em]">Awaiting biometric uplink...</p>
+                <p id="auth-msg" class="text-[8px] text-cyan-900 uppercase mt-4">Awaiting biometric uplink...</p>
             </div>
         </div>
     </div>
@@ -102,70 +62,44 @@
             <img id="main-logo" src="kira.png" alt="KIRA" class="w-6 h-6 object-contain">
             <span class="text-[10px] font-bold tracking-[0.2em] orbitron uppercase text-cyan-500">KIRA v6.0</span>
         </div>
-        <div class="flex h-full ml-4">
-            <button class="nav-btn px-6 h-full active-tab">Kira Neural</button>
-            <button class="nav-btn px-6 h-full text-zinc-800 cursor-not-allowed">SMC Terminal</button>
-        </div>
     </nav>
 
-    <main class="data-screen">
+    <main class="flex-grow flex items-center justify-center p-6">
         <div class="panel">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 <div>
-                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Market Asset</p>
-                    <p class="text-4xl font-bold tracking-tighter">XAUUSD</p>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Asset</p>
+                    <p class="text-3xl font-bold">XAUUSD</p>
                 </div>
                 <div>
-                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Quantum Price</p>
-                    <p class="text-4xl font-bold tracking-tighter text-cyan-400 italic">${{PRECIO}}</p>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Price</p>
+                    <p class="text-3xl font-bold text-cyan-400">${{PRECIO}}</p>
                 </div>
                 <div>
-                    <p class="text-[9px] text-cyan-500 orbitron mb-4 uppercase tracking-[0.3em]">Neural RSI</p>
-                    <p class="text-4xl font-bold tracking-tighter">{{RSI}}</p>
+                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">RSI</p>
+                    <p class="text-3xl font-bold">{{RSI}}</p>
                 </div>
             </div>
-            <div class="mt-12 pt-8 border-t border-white/5 flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
-                    <p class="text-[10px] font-bold orbitron uppercase tracking-[0.2em]">{{ESTADO}}</p>
-                </div>
-                <p class="text-[8px] text-zinc-600 uppercase italic">Kira Neural Core // Link Stable</p>
+            <div class="mt-10 pt-6 border-t border-white/5 flex justify-between items-center">
+                <p class="text-[10px] font-bold orbitron uppercase text-cyan-500 animate-pulse">{{ESTADO}}</p>
+                <p class="text-[8px] text-zinc-600 uppercase">Uplink: Stable</p>
             </div>
         </div>
     </main>
 
     <script>
-        const msg = document.getElementById('auth-msg');
-        const scanner = document.getElementById('scanner-group');
-
         function startEyeScan() {
-            scanner.classList.add('scanning');
-            msg.innerText = ">> SCANNING RETINA PATTERN...";
-            msg.style.color = "#00f2ff";
+            document.getElementById('scanner-group').classList.add('scanning');
+            document.getElementById('auth-msg').innerText = ">> SCANNING...";
             setTimeout(() => { 
-                msg.innerText = ">> IDENTITY VERIFIED. BIOMETRIC OK."; 
-                msg.style.color = "#22c55e";
+                document.getElementById('auth-msg').innerText = ">> VERIFIED."; 
                 setTimeout(unlock, 600); 
             }, 2000);
         }
-
-        function checkPass() {
-            if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "admin") {
-                unlock();
-            } else {
-                msg.innerText = ">> AUTHENTICATION FAILURE";
-                msg.style.color = "#ef4444";
-            }
-        }
-
-        function unlock() {
-            const overlay = document.getElementById('auth-overlay');
-            overlay.style.opacity = "0";
-            overlay.style.transform = "translateY(-100%)";
-            setTimeout(() => { 
-                overlay.style.display = 'none'; 
-                document.getElementById('main-logo').classList.add('kira-logo-active');
-            }, 800);
+        function checkPass() { if(document.getElementById('user').value === "admin") unlock(); }
+        function unlock() { 
+            document.getElementById('auth-overlay').style.display = 'none'; 
+            document.getElementById('main-logo').classList.add('kira-logo-active');
         }
     </script>
 </body>
