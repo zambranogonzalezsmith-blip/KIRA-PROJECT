@@ -54,3 +54,8 @@ async def ejecutar_cerebro_quantum():
 
 if __name__ == "__main__":
     asyncio.run(ejecutar_cerebro_quantum())
+with open("README.md", "w") as f:
+            f.write(f"# 🌌 Kira Quantum Status\n")
+            f.write(f"**Última ejecución:** {pd.Timestamp.now()}\n")
+            f.write(f"**Activo:** {symbol} | **Probabilidad:** {probabilidad}%\n")
+            f.write(f"**Decisión:** {'OPERACIÓN ABIERTA' if probabilidad > 80 else 'ESPERANDO'}")
