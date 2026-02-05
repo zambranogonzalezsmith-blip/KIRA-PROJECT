@@ -7,172 +7,103 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --dark-bg: #000508; }
-        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
+        :root { --cyan: #00f2ff; }
+        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; }
         .orbitron { font-family: 'Orbitron', sans-serif; }
         
-        /* Animación de Pulso */
-        @keyframes scan-glow {
-            0%, 100% { filter: drop-shadow(0 0 5px var(--cyan)); opacity: 0.8; }
-            50% { filter: drop-shadow(0 0 15px var(--cyan)); opacity: 1; }
+        /* Estilo de los Paneles */
+        .glass-panel { 
+            background: rgba(0, 242, 255, 0.03); 
+            border: 1px solid rgba(0, 242, 255, 0.1); 
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
-        .kira-logo-active { animation: scan-glow 3s infinite ease-in-out; }
+        .glass-panel:hover { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
 
-        /* OJO DIGITAL CSS */
-        .digital-eye {
-            position: relative; width: 100px; height: 60px;
-            background: rgba(0, 242, 255, 0.1); border-radius: 80% 10%;
-            transform: rotate(45deg); border: 2px solid var(--cyan);
-            overflow: hidden; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        /* Botones de Navegación */
+        .nav-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 1.5rem; border: 1px solid #111; border-radius: 8px;
+            text-transform: uppercase; font-size: 10px; letter-spacing: 2px;
+            transition: all 0.3s; cursor: pointer;
         }
-        .iris {
-            position: absolute; width: 40px; height: 40px;
-            background: radial-gradient(circle, var(--cyan) 20%, #000 70%);
-            border-radius: 50%; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); border: 1px solid var(--cyan);
-        }
-        .pupil {
-            position: absolute; width: 15px; height: 15px; background: #000; border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
+        .nav-card:hover { background: var(--cyan); color: #000; font-weight: bold; }
 
-        /* Overlay de Autenticación */
-        #auth-overlay { 
-            position: fixed; inset: 0; background: radial-gradient(circle at center, #051218 0%, #000 100%); 
-            z-index: 10000; display: flex; justify-content: center; align-items: center; 
-            transition: all 0.8s ease-in-out;
-        }
-
-        /* Navegación y Estilo de Botones */
-        nav { background: #020202; height: 60px; border-bottom: 1px solid #111; }
-        .nav-link { 
-            position: relative; transition: all 0.3s; color: #444; 
-            text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: 2px;
-        }
-        .nav-link:hover { color: var(--cyan); }
-        .active-tab { color: var(--cyan) !important; }
-        
-        .module-card {
-            background: linear-gradient(145deg, rgba(0,242,255,0.05) 0%, rgba(0,0,0,1) 100%);
-            border: 1px solid rgba(0,242,255,0.1);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .module-card:hover {
-            border-color: var(--cyan);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,242,255,0.1);
-        }
+        /* Overlay */
+        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
     <div id="auth-overlay">
-        <div class="bg-black/90 border border-cyan-500/20 p-10 rounded-xl w-[380px] text-center backdrop-blur-xl">
-            <div class="flex justify-center mb-6">
-                <div class="digital-eye"><div class="iris"><div class="pupil"></div></div></div>
-            </div>
-            <h2 class="orbitron text-[11px] font-bold mb-8 tracking-[0.4em] text-cyan-500 uppercase">Neural Access Required</h2>
-            <input id="pass" type="password" placeholder="SECURITY KEY" class="w-full bg-black/60 border border-cyan-900/50 p-3 rounded text-[10px] outline-none text-cyan-400 mb-4 text-center">
-            <button onclick="unlock()" class="w-full bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold py-3 rounded orbitron hover:bg-cyan-500 hover:text-black transition-all">ESTABLISH UPLINK</button>
+        <div class="text-center p-10 glass-panel rounded-xl">
+            <h2 class="orbitron text-cyan-500 text-xs tracking-[0.5em] mb-6 uppercase">Identity Check</h2>
+            <input id="pass" type="password" placeholder="KEY" class="bg-black border border-cyan-900 p-3 rounded text-center text-cyan-400 mb-4 outline-none">
+            <button onclick="unlock()" class="block w-full border border-cyan-500 text-cyan-500 p-3 orbitron text-[10px] hover:bg-cyan-500 hover:text-black">CONNECT</button>
         </div>
     </div>
 
-    <nav class="flex items-center justify-between px-8">
+    <nav class="h-16 border-b border-zinc-900 flex items-center px-8 justify-between">
         <div class="flex items-center gap-4">
-            <div id="main-logo" class="w-8 h-8 bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/30">
-                <span class="text-cyan-500 font-bold text-xs">K</span>
-            </div>
-            <span class="orbitron text-[10px] tracking-[0.3em] font-bold uppercase">Kira <span class="text-cyan-500">v6.0</span></span>
+            <span class="orbitron text-cyan-500 font-bold tracking-widest text-sm">KIRA // NEURAL HUB</span>
         </div>
-        
-        <div class="hidden md:flex gap-8">
-            <a href="index.html" class="nav-link active-tab">Dashboard</a>
-            <a href="scalper.html" class="nav-link">Radar Scalper</a>
-            <a href="smc.html" class="nav-link">SMC Terminal</a>
-            <a href="vault.html" class="nav-link">The Vault</a>
-        </div>
-
-        <div class="text-[9px] text-zinc-600 orbitron uppercase tracking-widest">
-            System Status: <span class="text-green-500 animate-pulse">Online</span>
-        </div>
+        <div class="text-[9px] text-zinc-600 uppercase tracking-widest">Status: <span class="text-cyan-500">Live Uplink</span></div>
     </nav>
 
-    <main class="flex-grow p-8 container mx-auto">
+    <main class="flex-grow p-8 max-w-6xl mx-auto w-full">
         
-        <section class="mb-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="module-card p-6 rounded-lg">
-                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Pair / Symbol</p>
-                    <p class="text-3xl font-bold tracking-tighter">XAUUSD</p>
-                </div>
-                <div class="module-card p-6 rounded-lg">
-                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Quantum Price</p>
-                    <p class="text-3xl font-bold tracking-tighter text-cyan-400 italic">${{PRECIO}}</p>
-                </div>
-                <div class="module-card p-6 rounded-lg">
-                    <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Neural RSI</p>
-                    <p class="text-3xl font-bold tracking-tighter">{{RSI}}</p>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="glass-panel p-8 rounded-lg text-center">
+                <p class="text-[9px] text-zinc-500 orbitron mb-2 uppercase tracking-widest">Instrument</p>
+                <p class="text-3xl font-bold">XAUUSD</p>
             </div>
-            <div class="mt-4 flex items-center gap-3 px-2">
-                <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-                <p class="text-[10px] font-bold orbitron text-cyan-500 uppercase tracking-widest">{{ESTADO}}</p>
+            <div class="glass-panel p-8 rounded-lg text-center">
+                <p class="text-[9px] text-cyan-500 orbitron mb-2 uppercase tracking-widest">Quantum Price</p>
+                <p id="price-val" class="text-3xl font-bold text-cyan-400 italic">${{PRECIO}}</p>
             </div>
-        </section>
-
-        <h3 class="orbitron text-[10px] text-zinc-500 mb-6 uppercase tracking-[0.4em]">Neural Modules</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            
-            <a href="scalper.html" class="module-card p-8 rounded-lg group">
-                <div class="mb-4 text-cyan-500 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2" />
-                    </svg>
-                </div>
-                <h4 class="orbitron text-xs font-bold mb-2">RADAR SCALPER</h4>
-                <p class="text-[10px] text-zinc-500 leading-relaxed">Detección de alta frecuencia y volumen en micro-tendencias.</p>
-            </a>
-
-            <a href="smc.html" class="module-card p-8 rounded-lg group">
-                <div class="mb-4 text-cyan-500 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                </div>
-                <h4 class="orbitron text-xs font-bold mb-2">SMC TERMINAL</h4>
-                <p class="text-[10px] text-zinc-500 leading-relaxed">Análisis de Smart Money Concepts e inyección institucional.</p>
-            </a>
-
-            <a href="vault.html" class="module-card p-8 rounded-lg group">
-                <div class="mb-4 text-cyan-500 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                <h4 class="orbitron text-xs font-bold mb-2">THE VAULT</h4>
-                <p class="text-[10px] text-zinc-500 leading-relaxed">Archivo encriptado de operaciones y registros históricos.</p>
-            </a>
-
+            <div class="glass-panel p-8 rounded-lg text-center">
+                <p class="text-[9px] text-zinc-500 orbitron mb-2 uppercase tracking-widest">Neural RSI</p>
+                <p id="rsi-val" class="text-3xl font-bold">{{RSI}}</p>
+            </div>
         </div>
+
+        <div class="flex items-center gap-3 mb-12 bg-cyan-500/5 p-4 border-l-2 border-cyan-500">
+            <div class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+            <p class="text-[10px] orbitron font-bold text-cyan-500 tracking-widest">{{ESTADO}}</p>
+        </div>
+
+        <h3 class="orbitron text-[10px] text-zinc-600 mb-6 uppercase tracking-[0.4em]">Sub-Systems</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <a href="scalper.html" class="nav-card">
+                <span>Radar Scalper</span>
+                <span class="text-[8px] mt-2 opacity-50">High Frequency</span>
+            </a>
+            <a href="smc.html" class="nav-card">
+                <span>SMC Terminal</span>
+                <span class="text-[8px] mt-2 opacity-50">Smart Money</span>
+            </a>
+            <a href="vault.html" class="nav-card">
+                <span>The Vault</span>
+                <span class="text-[8px] mt-2 opacity-50">Encrypted Logs</span>
+            </a>
+        </div>
+
     </main>
 
-    <footer class="p-6 border-t border-zinc-900 text-center">
-        <p class="text-[8px] text-zinc-700 orbitron tracking-[0.5em] uppercase">Neural Hub Encryption: Active // 2026 Epoch</p>
-    </footer>
-
     <script>
+        // Si el bot no ha inyectado datos, ponemos valores por defecto para que no se vea el {{}}
+        window.onload = () => {
+            const p = document.getElementById('price-val');
+            const r = document.getElementById('rsi-val');
+            if(p.innerText.includes('{{')) p.innerText = "WAITING...";
+            if(r.innerText.includes('{{')) r.innerText = "--";
+        };
+
         function unlock() {
-            const pass = document.getElementById('pass').value;
-            if(pass === "admin") { // Cambia esto por tu clave real
-                const overlay = document.getElementById('auth-overlay');
-                overlay.style.opacity = "0";
-                overlay.style.transform = "scale(1.1)";
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.getElementById('main-logo').classList.add('kira-logo-active');
-                }, 800);
+            if(document.getElementById('pass').value === "admin") {
+                document.getElementById('auth-overlay').style.display = 'none';
             } else {
-                alert("ACCESS DENIED: INVALID QUANTUM KEY");
+                alert("KEY INVALID");
             }
         }
     </script>
