@@ -2,13 +2,22 @@ import os
 import asyncio
 from metaapi_cloud_sdk import MetaApi
 import pandas as pd
-import pandas_ta as ta
 
-# Solo estas dos llaves (Secrets en GitHub)
 TOKEN = os.getenv('MT5_TOKEN')
 ACCOUNT_ID = os.getenv('MT5_ACCOUNT_ID')
 
+def calcular_rsi(prices, period=14):
+    delta = prices.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
+
 async def ejecutar_kira():
+    if not TOKEN or not ACCOUNT_ID:
+        print("❌ Faltan Secrets en GitHub")
+        return
+
     api = MetaApi(TOKEN)
     try:
         account = await api.metatrader_account_api.get_account(ACCOUNT_ID)
@@ -17,29 +26,28 @@ async def ejecutar_kira():
         await connection.connect()
         await connection.wait_synchronized()
 
-        # Just Markets usa 'XAUUSD' o 'GOLD'. Probamos con 'XAUUSD'
+        # Just Markets usualmente usa XAUUSD o GOLD. 
         symbol = 'XAUUSD' 
+        candles = await connection.get_candles(symbol, '15m', None, 30)
         
-        # 1. Análisis rápido
-        candles = await connection.get_candles(symbol, '15m', None, 20)
         df = pd.DataFrame(candles)
-        
-        rsi = ta.rsi(df['close'], length=14).iloc[-1]
-        
-        print(f"[KIRA]: Precio actual {df['close'].iloc[-1]} | RSI: {rsi:.2f}")
+        rsi_series = calcular_rsi(df['close'])
+        rsi_actual = rsi_series.iloc[-1]
+        precio_actual = df['close'].iloc[-1]
 
-        # Lógica simple de disparo
-        if rsi < 30:
+        print(f"📊 {symbol} | Precio: {precio_actual} | RSI: {rsi_actual:.2d}")
+
+        if rsi_actual < 30:
+            print("🚀 Señal de COMPRA")
             await connection.create_market_buy_order(symbol, 0.01, 200, 400)
-            print("🚀 COMPRA EJECUTADA")
-        elif rsi > 70:
+        elif rsi_actual > 70:
+            print("📉 Señal de VENTA")
             await connection.create_market_sell_order(symbol, 0.01, 200, 400)
-            print("📉 VENTA EJECUTADA")
         else:
-            print("💎 MODO VIGILANCIA: Sin oportunidades claras.")
+            print("💎 Mercado neutral. Vigilando...")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
     asyncio.run(ejecutar_kira())
