@@ -18,35 +18,22 @@
         }
         .kira-logo-active { animation: scan-glow 3s infinite ease-in-out; }
 
-        /* OJO DIGITAL CSS (Sustituye a la imagen con error) */
+        /* OJO DIGITAL CSS */
         .digital-eye {
-            position: relative;
-            width: 100px;
-            height: 60px;
-            background: rgba(0, 242, 255, 0.1);
-            border-radius: 80% 10%;
-            transform: rotate(45deg);
-            border: 2px solid var(--cyan);
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            position: relative; width: 100px; height: 60px;
+            background: rgba(0, 242, 255, 0.1); border-radius: 80% 10%;
+            transform: rotate(45deg); border: 2px solid var(--cyan);
+            overflow: hidden; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
         }
         .iris {
-            position: absolute;
-            width: 40px;
-            height: 40px;
+            position: absolute; width: 40px; height: 40px;
             background: radial-gradient(circle, var(--cyan) 20%, #000 70%);
-            border-radius: 50%;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            border: 1px solid var(--cyan);
+            border-radius: 50%; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); border: 1px solid var(--cyan);
         }
         .pupil {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background: #000;
-            border-radius: 50%;
-            top: 50%; left: 50%;
+            position: absolute; width: 15px; height: 15px;
+            background: #000; border-radius: 50%; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
 
@@ -59,8 +46,7 @@
         }
         .scan-line { 
             position: absolute; width: 100%; height: 2px; 
-            background: var(--cyan);
-            box-shadow: 0 0 15px var(--cyan); top: 50%; opacity: 0; z-index: 30;
+            background: var(--cyan); box-shadow: 0 0 15px var(--cyan); top: 50%; opacity: 0; z-index: 30;
         }
         .scanning .scan-line { animation: scan-move 1.5s ease-in-out infinite; opacity: 1; }
         
@@ -98,9 +84,7 @@
                     <div class="reticle-scan"></div>
                     <div class="scan-line"></div>
                     <div class="digital-eye">
-                        <div class="iris">
-                            <div class="pupil"></div>
-                        </div>
+                        <div class="iris"><div class="pupil"></div></div>
                     </div>
                 </div>
             </div>
@@ -127,7 +111,8 @@
         </div>
 
         <div class="flex h-full ml-4">
-            <button onclick="loadModule('smc.html', this)" class="nav-btn px-6 h-full active-tab">SMC Terminal</button>
+            <button onclick="loadModule('Kira mt4.html', this)" class="nav-btn px-6 h-full active-tab">Kira Neural</button>
+            <button onclick="loadModule('smc.html', this)" class="nav-btn px-6 h-full">SMC Terminal</button>
             <button onclick="loadModule('scalper.html', this)" class="nav-btn px-6 h-full">Radar</button>
             <button onclick="loadModule('vault.html', this)" class="nav-btn px-6 h-full">The Vault</button>
         </div>
@@ -145,7 +130,7 @@
     </nav>
 
     <main class="flex-grow">
-        <iframe src="smc.html" id="main-frame" name="main-frame"></iframe>
+        <iframe src="Kira mt4.html" id="main-frame" name="main-frame"></iframe>
     </main>
 
     <script>
@@ -165,7 +150,9 @@
         }
 
         function checkPass() {
-            if(document.getElementById('user').value === "admin" && document.getElementById('pass').value === "admin") {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === "admin" && p === "admin") {
                 unlock();
             } else {
                 msg.innerText = ">> AUTHENTICATION FAILURE";
@@ -187,7 +174,7 @@
             const frame = document.getElementById('main-frame');
             frame.style.opacity = "0";
             setTimeout(() => {
-                frame.src = "./" + file;
+                frame.src = file; // Carga el archivo desde el mismo nivel de directorio
                 frame.onload = () => frame.style.opacity = "1";
             }, 200);
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
