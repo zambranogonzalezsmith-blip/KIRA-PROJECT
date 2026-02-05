@@ -1,3 +1,0 @@
-metaapi-cloud-sdk
-pandas
-pandas_ta
